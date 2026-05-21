@@ -1,0 +1,12 @@
+# Core Data Science & Math
+numpy>=1.26.0
+pandas>=2.2.0
+
+# Machine Learning & Pipelines
+scikit-learn>=1.4.0
+xgboost>=2.0.0
+
+# API Deployment & Schema Validation
+fastapi>=0.110.0
+pydantic>=2.7.0
+uvicorn[standard]>=0.30.0
