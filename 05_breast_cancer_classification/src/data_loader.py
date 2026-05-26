@@ -1,13 +1,10 @@
-import os
 import pandas as pd
 
-def load_cancer_dataset(filepath=None):
-    if filepath is None:
-        filepath = "/home/sameer/Documents/jupyter/ml-projects-portfolio/data/breastcancer.csv"
+def load_cancer_dataset(filepath) -> pd.DataFrame:
         
     df = pd.read_csv(filepath).drop_duplicates()
     
-    # Pruning features showing close-to-zero correlation bounds (|r| < 0.01) with the target
+    # Removing features showing very low correlation (|r| < 0.01) with y
     uninformative_features = [
         "texture_se", 
         "smoothness_se", 
@@ -21,12 +18,12 @@ def load_cancer_dataset(filepath=None):
 
 import pandas as pd
 
-def process_and_split_features(df):
-    # Safe categorical extraction to binary map: Malignant = 1, Benign = 0
+def process_and_split_features(df: pd.DataFrame) -> pd.DataFrame:
+    # Encoded: Malignant = 1, Benign = 0
     dummies = pd.get_dummies(df['diagnosis'], dtype=int)
     df_processed = pd.concat([df, dummies], axis=1)
     
-    # Dropping the intercept category (B) alongside metadata keys to isolate clean numerical fields
+    # Dropping the intercept category (B) and metadata keys
     X = df_processed.drop(columns=["id", "B", "diagnosis", "M"], errors="ignore")
     y = df_processed["M"]
     

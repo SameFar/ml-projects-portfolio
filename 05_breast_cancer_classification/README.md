@@ -1,40 +1,40 @@
 # Multi-Paradigm Breast Cancer Classification & Consensus Ensemble
 
-### 🎯 The Quirk & Learning Objective
-This project implements a multi-model evaluation strategy to study how **8 distinct algorithmic families** react to variance-stabilizing feature scaling and unsupervised outlier filtration. 
+An end-to-end machine learning pipeline implementing a heterogeneous threshold-consensus ensemble across **8 distinct algorithmic families**. This repository demonstrates production-grade engineering patterns, including asymmetric preprocessing pipelines, automated feature selection, and a clinical-grade risk-averse inference engine.
 
-Beyond individual model exploration, the second core learning objective was to build a **heterogeneous threshold-consensus ensemble script** that aggregates predictions across all 8 architectures to simulate a clinical decision-support system.
+---
 
-**Key engineering patterns implemented:**
-* **Asymmetric Preprocessing Pipelines:** 
-  * *Parametric Models* (Logistic Regression, SVC, SGD, KNN, Naive Bayes) process data optimized via a `Yeo-Johnson PowerTransformer` and an `IsolationForest` wrapper to drop extreme leverage points.
-  * *Non-Parametric Models* (Trees, Random Forests, XGBoost) process the raw training distribution directly, as they are naturally scale-invariant.
-* **Clinical Sensitivity Tuning (Ensemble Vote):** Instead of a standard majority vote threshold (> 4), the inference engine implements a conservative threshold rule (`vote > 3`). If 4 or more models flag malignancy, the final system output forces a **Malignant** classification. This architecture penalizes false negatives heavily, making it far safer for screening diagnostics.
+## 🏗️ Architecture Design & Engineering Patterns
 
-### 🛠️ Production Feature Matrix
-The inference pipeline explicitly checks, structures, and enforces input data against these 25 structural measurements, completely stripping uninformative low-correlation attributes ($|r| < 0.01$) dynamically before processing:
-`radius`, `texture`, `perimeter`, `area`, `smoothness`, `compactness`, `concavity`, and `concave points` across their respective `_mean`, `_se`, and `_worst` variations.
+Rather than applying a generic blanket pipeline, the system utilizes a split-architecture approach to optimize data structures based on mathematical assumptions of the underlying model families:
 
-### 📊 Performance Metric Summary
-The individual validation runs logged the following competitive benchmarks:
+* **Asymmetric Preprocessing Pipelines:** * **Distance & Gradient-Based Models** (*Logistic Regression, SVC, SGD, KNN, Naive Bayes*): Data is dynamically transformed via a `Yeo-Johnson PowerTransformer` to minimize skew, followed by an `IsolationForest` wrapper to dynamically prune extreme leverage points.
+  * **Tree-Based Models** (*Decision Trees, Random Forests, XGBoost*): Processed using the raw input distribution, preserving data splitting criteria and avoiding unnecessary computation on scale-invariant architectures.
+* **Dynamic Feature Selection:** The inference pipeline enforces strict input validation against a 25-dimensional structural measurement matrix. It programmatically drops low-correlation attributes ($|r| < 0.01$) dynamically before processing to reduce feature noise and mitigate the curse of dimensionality.
+* **Clinical Sensitivity Tuning (Ensemble Vote):** To simulate a real-world clinical decision-support system, the inference engine replaces standard majority voting with a conservative risk-averse threshold (`vote > 3`). If 4 or more of the 8 models flag malignancy, the final output forces a **Malignant** classification—heavily penalizing false negatives to optimize patient safety in screening diagnostics.
 
-| Model Architecture | Accuracy | Precision | Recall | F1-Score | Preprocessing Profile |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Logistic Regression** | **0.982** | **0.982** | **0.982** | **0.982** | Yeo-Johnson + Isolation Forest |
-| **SGD Classifier** | 0.974 | 0.974 | 0.974 | 0.974 | Yeo-Johnson + Isolation Forest |
-| **Support Vector Classifier (SVC)** | 0.974 | 0.974 | 0.974 | 0.974 | Yeo-Johnson + Isolation Forest |
-| **K-Nearest Neighbors (KNN)** | 0.965 | 0.965 | 0.965 | 0.965 | Yeo-Johnson + Isolation Forest |
-| **Gaussian Naive Bayes** | 0.956 | 0.956 | 0.956 | 0.956 | Yeo-Johnson + Isolation Forest |
-| **Random Forest** | 0.956 | 0.956 | 0.956 | 0.956 | Raw Input Distribution |
-| **XGBoost** | 0.956 | 0.956 | 0.956 | 0.956 | Raw Input Distribution |
-| **Decision Tree** | 0.921 | 0.922 | 0.921 | 0.921 | Raw Input Distribution |
+---
 
-### 💡 Core Takeaways
-* **Linear Simplicity Wins:** For this high-dimensional feature space, a regularized Logistic Regression model outpaced complex tree ensembles. This strongly suggests that the underlying class decision boundary is mostly linear once heavy skewness is stabilized.
-* **The Benefit of Consensus:** While individual trees or naive bayes models score lower standalone, when tied together into the consensus wrapper, they act as stable regularizers, catching edge cases where margins might clip in distance estimation algorithms.
+## 📊 Performance Metric Summary
 
-### 🚀 Running the Production Pipeline
+Inside results folder
 
-**To retrain all models and re-export the binary weights:**
-```bash
+### 💡 Core Engineering Takeaways
+1. **Occam's Razor in High-Dimensional Space:** Regularized Logistic Regression outperformed complex tree ensembles. This indicates that once heavy feature skewness is mathematically stabilized, the underlying decision boundary is predominantly linear.
+2. **Consensus Regularization:** While standalone tree models underperformed due to variance, their integration into the conservative consensus wrapper acts as an algorithmic buffer, catching edge cases where distance estimation models hit margin limitations.
+
+---
+
+## 🚀 Deployment & Execution Guide
+
+### 1. Training Pipeline
+To execute the end-to-end training pipeline, optimize hyperparameters, and serialize the binary weights (`.pkl`/`.onnx` format):
+
+Bash
 python src/train.py
+
+### 2. Production Inference & Prediction
+Before executing the prediction file, you must edit data.csv and populate it with real, unstructured patient values matching the 25 required features (e.g., radius_mean, texture_worst, etc.) for the engine to evaluate.
+
+Bash
+python src/predict.py --input data.csv

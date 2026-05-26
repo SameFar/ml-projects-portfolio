@@ -2,8 +2,9 @@
 import os
 import pickle
 import pandas as pd
+from typing import Any
 
-# The exact 25-feature matrix your trained models expect
+# The exact 25-feature matrix the models expect
 EXPECTED_FEATURES = [
     'radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean',
     'smoothness_mean', 'compactness_mean', 'concavity_mean',
@@ -14,20 +15,19 @@ EXPECTED_FEATURES = [
     'concave points_worst', 'symmetry_worst', 'fractal_dimension_worst'
 ]
 
-def load_all_models(models_dir):
+def load_all_models(models_dir: str | os.PathLike) -> dict[str, Any]:
     model_names = ["SVC", "KNN", "Logistic_Regression", "Naive_Bayes", "Random_Forest", "Decision_Tree", "XGBoost", "SGD"]
     models_dict = {}
     
     for name in model_names:
         file_path = os.path.join(models_dir, f"{name}_model.pkl")
         with open(file_path, "rb") as f:
-            # Remap keys to reader-friendly display strings
-            display_name = name.replace("_", " ")
+            display_name = name
             models_dict[display_name] = pickle.load(f)
             
     return models_dict
 
-def run_ensemble_vote(sample_df, models_dict):
+def run_ensemble_vote(sample_df: pd.DataFrame, models_dict):
     # Force exact column alignment and ordering to prevent matrix dimension mismatch
     X = sample_df[EXPECTED_FEATURES]
     
