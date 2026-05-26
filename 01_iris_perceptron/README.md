@@ -1,30 +1,29 @@
-# Building a Perceptron from Scratch: Virginica Classification
+# Perceptron from Scratch (Iris - Virginica)
 
-A fundamental, modular implementation of a single-layer Perceptron built entirely with Python and NumPy. This project tests linear classification capabilities on a subset of the Iris dataset.
+Single-layer Perceptron built from scratch using NumPy for binary classification on Iris Virginica.
 
-## 💡 Learning Objective
-Instead of utilizing high-level APIs like scikit-learn, **the objective here was to build the underlying optimization algorithms from first principles.** 
+## What I Built
 
-This specific project allowed me to analyze:
-* The core mathematical formulation of weight updates based on direct prediction error: $\Delta w = \eta \cdot (y - \hat{y}) \cdot x$
-* The structural limitations of a single-layer neural network when applied to classes that cannot be cleanly split by a single linear hyperplane.
+- Perceptron implemented without ML libraries
+- Manual weight update rule using gradient-style error correction
+- Training loop with fixed epoch cap
+- Basic evaluation + visualization pipeline
 
-## 📁 Repository Structure
-* `portfolio_notebook.ipynb`: Scratchpad workflow detailing initial exploratory data data structure checks, manual one-hot filtering, and interactive visualization code.
-* `src/`: Refactored production modules.
-  * `data_loader.py`: Handles duplicate/null dropping and formats features into a matrix structure.
-  * `perceptron.py`: Outlines the custom explicit `Perceptron` class.
-  * `main.py`: Oversees execution, metrics handling, and visualization pipelines.
-* `results/`: Outward metrics storage.
-  * `results.txt`: Log tracking final learned parameter weights, biases, and terminal training accuracy.
-  * `prediction_comparison.png`: Side-by-side scatter plot comparing ground-truth targets against model outputs.
+## Key Insight
 
-## 📊 Key Results & Insights
-* **The Non-Convergence Phenomenon:** Because the Iris class distributions (specifically mapping Virginica using only sepal dimensional metrics) are not perfectly linearly separable, the Perceptron loop runs through all 1,000 maximum epochs without early convergence ($total\_error == 0$).
-* **Decision Boundary Quality:** Despite the lack of perfect linear convergence, the simple architecture yields strong performance, stabilizing around **~99.7%** accuracy (check `results/results.txt` for exact run metrics).
+- Data is not fully linearly separable
+- No guaranteed convergence, training stabilizes after many epochs
+- Accuracy ~99.7% (see `results/results.txt`)
 
-## 🚀 How to Execute
-To clean the data, train the model, log accuracy profiles, and output decision figures:
+## Structure
+
+- `portfolio_notebook.ipynb` → experimentation
+- `src/perceptron.py` → core model
+- `src/data_loader.py` → dataset prep
+- `results/` → logs + plots
+
+## Run
+
 ```bash
 cd src
 python train.py
