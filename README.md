@@ -1,94 +1,31 @@
-# Islamabad Housing Price Prediction
+# Machine Learning & AI Portfolio
 
-Machine learning pipeline for predicting housing price ranges in Islamabad using real estate listings from [Zameen.com].
+Portfolio repository containing machine learning, and data engineering projects built while learning and experimenting with real-world workflows.
 
-## Overview
-
-This project uses cleaned and engineered housing data to classify property prices into 5 quantile-based price categories.
-
-The pipeline includes:
-
-* Data cleaning and preprocessing
-* Geographic filtering for Islamabad-only listings
-* Low-frequency area handling
-* Feature engineering
-* Stratified geographic train/test splitting
-* Classification using XGBoost
-* FastAPI deployment for local inference
-
-Regression models were also explored in the research notebook and will be integrated into the production pipeline later.
+The goal of this repo is to document progression over time while showcasing practical projects with production-style structure, APIs, preprocessing pipelines, and deployment workflows.
 
 ---
 
-## Dataset Processing
+## Repository Goals
 
-Key preprocessing steps:
+This repository focuses on:
 
-* Removed listings outside Islamabad
-* Handled missing and inconsistent values
-* Removed low-frequency locations
-* Encoded categorical features
-* Applied geographic balancing strategy using:
-
-```python
-run_macro_stratified_split(df)
-```
-
-This custom split strategy improves regional balance across evaluation folds.
+- Building practical AI/ML systems
+- Learning production-ready workflows
+- Improving code quality and project structure
+- Tracking technical growth over time
 
 ---
 
-## Model
+## Current Focus Areas
 
-### Classification
-
-* Model: `XGBClassifier`
-* Target: 5 quantile-based housing price classes
-
-### Regression
-
-Regression experiments are available in the notebook but are not yet integrated into the `src/` pipeline.
+- Machine Learning Engineering
+- Data Engineering
 
 ---
 
-## FastAPI Deployment
+## Notes
 
-A local FastAPI server is included for real-time predictions.
-
-Users can input housing features and receive predicted price categories through the API docs interface.
+- Some projects are still under active development
 
 ---
-
-## Usage
-
-### Train the Model
-
-```bash
-python main.py
-```
-
-### Run FastAPI Server
-
-```bash
-python app.py
-```
-
----
-
-## Current Status
-
-* Classification pipeline implemented
-* FastAPI deployment working locally
-* Regression pipeline pending integration
-* Metrics and evaluation reports will be added soon
-
----
-
-## Tech Stack
-
-* Python
-* Pandas
-* Scikit-learn
-* XGBoost
-* FastAPI
-* Jupyter Notebook
