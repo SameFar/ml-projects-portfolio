@@ -4,7 +4,7 @@ from data_preprocessing import get_data
 from conversion import get_y_dict
 from save_model import save_model
 
-EPOCH = 2000
+EPOCH = 3000
 
 model = NeuralNetwork()
 X, y = get_data()
