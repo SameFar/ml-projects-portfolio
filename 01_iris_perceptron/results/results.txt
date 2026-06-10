@@ -1,0 +1,7 @@
+=== Perceptron From Scratch Run Info ===
+Total dataset size: 147 records
+Epochs completed: 1000
+Converged perfectly: False
+Final training accuracy: 0.9796
+Learned Weights: [-0.998 -1.249  1.553  2.463]
+Learned Bias: -1.7900
