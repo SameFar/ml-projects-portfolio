@@ -7,11 +7,11 @@ from model import clean_training_outliers, get_baseline_models, evaluate_predict
 def main():
     print("Executing pipeline...")
     
-    # 1. Pipeline ingestion & cleaning
+    # DF ingestion & cleaning
     df = load_base_data()
     X, y = build_features(df)
     
-    # 2. Train/Test Splits & Variance Reduction Transformation
+    # Train/Test Splits & Variance Reduction Transformation
     # Converting to numpy vectors cleanly to align with the original notebook setup
     X_vals = X.values
     y_vals = np.log1p(y.values)
@@ -20,10 +20,10 @@ def main():
         X_vals, y_vals, test_size=0.25, random_state=42
     )
     
-    # 3. Isolation Forest Outlier Removal (Isolated to Training Set)
+    # Isolation Forest Outlier Removal (Only on Training Set)
     X_train, y_train = clean_training_outliers(X_train, y_train)
     
-    # 4. Train Models and Store Outputs
+    # Train Models and Store Outputs
     models = get_baseline_models()
     results_output = []
     
@@ -38,7 +38,7 @@ def main():
         print(report_line)
         results_output.append(report_line)
         
-    # 5. Write execution results file
+    # Write execution results file
     results_dir = os.path.join(os.path.dirname(__file__), "../results")
     os.makedirs(results_dir, exist_ok=True)
     

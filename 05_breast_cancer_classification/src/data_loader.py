@@ -1,6 +1,7 @@
 import pandas as pd
 
 def load_cancer_dataset(filepath) -> pd.DataFrame:
+    # Dataset from https://www.kaggle.com/datasets/uciml/breast-cancer-wisconsin-data
         
     df = pd.read_csv(filepath).drop_duplicates()
     

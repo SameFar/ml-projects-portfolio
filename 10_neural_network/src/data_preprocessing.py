@@ -2,6 +2,7 @@ import pandas as pd
 from pathlib import Path
 
 def get_data():
+    # from https://www.kaggle.com/datasets/suryaprabha19/fashion-and-color-recommendation-dataset
     data_path = Path(__file__).resolve().parent.parent.parent / 'data' / 'recommendations.csv'
     
     dfc = pd.read_csv(data_path)

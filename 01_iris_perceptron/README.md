@@ -27,4 +27,4 @@ This specific project allowed me to analyze:
 To clean the data, train the model, log accuracy profiles, and output decision figures:
 ```bash
 cd src
-python train.py
+python main.py

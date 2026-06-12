@@ -6,8 +6,9 @@ from perceptron import Perceptron
 from pathlib import Path
 
 def main():
-    data_path = Path("/home/sameer/Documents/jupyter/ml-projects-portfolio/data/iris.csv")
-    results_dir = Path("/home/sameer/Documents/jupyter/ml-projects-portfolio/01_iris_perceptron/results")
+    # dataset from https://www.kaggle.com/datasets/vikrishnan/iris-dataset
+    data_path = Path(__file__).resolve().parent.parent.parent / 'data' / 'iris.csv'
+    results_dir = Path(__file__).resolve().parent.parent / 'results'
     os.makedirs(results_dir, exist_ok=True)
 
     # 1. Prepare data

@@ -7,7 +7,7 @@ def load_and_clean_data(file_path):
     Executes regional token cleaning, spatial metric normalization (Marlas),
     and sets up discrete target classification brackets.
     """
-    # Load raw assets and strip structural duplicates
+    # dataset from https://www.kaggle.com/datasets/diraf0/pakistan-housing-dataset
     raw_df = pd.read_csv(file_path).drop_duplicates().dropna()
     
     # Restrict scope to Islamabad records and strip unresolved range strings

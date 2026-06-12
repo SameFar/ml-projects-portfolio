@@ -3,7 +3,8 @@ import pandas as pd
 from pathlib import Path
 from sklearn.model_selection import train_test_split
 
-# Locate raw data dynamically
+# Download dataset from https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud
+# Edit DEFAULT_PATH
 BASE_DIR = Path(__file__).resolve().parent.parent
 DEFAULT_PATH = BASE_DIR.parent / "data" / "creditcard.csv"
 

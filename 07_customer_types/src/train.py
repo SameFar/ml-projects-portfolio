@@ -5,6 +5,7 @@ import pickle
 import pandas as pd
 
 def train():
+    # Dataset from https://archive.ics.uci.edu/dataset/352/online+retail
     BASE_DIR = Path(__file__).resolve().parent.parent
     DATA_DIR = BASE_DIR.parent / "data" / 'online_retail_II.xlsx'
     gmm = GaussianMixture(n_components=6)

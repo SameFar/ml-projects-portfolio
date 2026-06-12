@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.preprocessing import OneHotEncoder
 
 def load_base_data(data_dir=None):
-    # Fallback path pointing to your centralized data directory
+    # Dataset from https://www.kaggle.com/datasets/rodolfomendes/abalone-dataset
     if data_dir is None:
         data_dir = "/home/sameer/Documents/jupyter/ml-projects-portfolio/data"
         
