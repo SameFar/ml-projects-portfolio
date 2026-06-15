@@ -58,8 +58,8 @@ def display_images(images, titles=None):
         # Render image window
         cv2.imshow(window_title, resized_img)
 
-        # Break loop if 'q' is pressed, otherwise show next image every 100ms
-        if cv2.waitKey(100) & 0xFF == ord("q"):
+        # Break loop if 'q' is pressed, otherwise show next image every 3s
+        if cv2.waitKey(300) & 0xFF == ord("q"):
             break
 
     cv2.destroyAllWindows()

@@ -7,6 +7,7 @@ from save_model import save_model
 X_train, X_test = get_images()
 y_train, y_test = get_labels()
 epochs = 100 # Should take awhile
+steps = 0
 
 model = CompleteCNN(learning_rate=0.01)
 
@@ -25,7 +26,9 @@ for epoch in range(epochs):
     train_acc = (correct_train / len(X_train)) * 100
     print(f"Epoch {epoch+1}/{epochs} Completed | Train Accuracy: {train_acc:.2f}%")
     
-    if train_acc == 100:
+    if train_acc > 99:
+        steps +=1
+    if train_acc == 100 or steps == 10:
         break
 
 print("\nTraining Finished.")

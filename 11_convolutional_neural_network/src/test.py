@@ -17,7 +17,7 @@ failed_predicted_labels = []
 
 for x_sample, y_label in zip(X_test, y_test):
     
-    predictions = model.forward(x_sample)
+    predictions = model.forward(x_sample, is_training=False)
     predicted_label = np.argmax(predictions)
     
     if predicted_label == y_label:
@@ -39,10 +39,9 @@ if len(failed_images) > 0:
     
     failed_images_arr = np.array(failed_images)
     
-    # Create descriptive titles for each sub-plot window so you can see the error
+    # To set display title
     custom_titles = [f"True: {t} | Pred: {p}" for t, p in zip(failed_true_labels, failed_predicted_labels)]
     
-    # Send the failed images and their error titles to display function
-    display_images(failed_images_arr[:10], custom_titles)
+    display_images(failed_images_arr, custom_titles)
 else:
     print("\nIncredible! The model didn't fail a single test.")

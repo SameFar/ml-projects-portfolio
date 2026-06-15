@@ -46,16 +46,16 @@ class NeuralNetwork:
 
     def forward(self, X):
         self.Z1 = np.dot(X, self.weights) + self.bias
-        self.A1 = self.relu(self.Z1)
+        self.A1 = self._relu(self.Z1)
         preds = {}
 
         for name, meta in self.heads.items():
             Z_head = np.dot(self.A1, meta['weights']) + meta['bias']
             
             if meta['type'] == 'mc':
-                preds[name] = self.softmax(Z_head) 
+                preds[name] = self._softmax(Z_head) 
             else:
-                preds[name] = self.sigmoid(Z_head) 
+                preds[name] = self._sigmoid(Z_head) 
 
         
         if self.learning_rate > 0.001:
@@ -84,7 +84,7 @@ class NeuralNetwork:
             meta['bias'] -= self.learning_rate * db_head
             
         # Use the Blame Bucket™ to update your input layer weights
-        dZ1 = grades * self.relu_derivative(self.Z1)
+        dZ1 = grades * self._relu_derivative(self.Z1)
         dW1 = (1 / rows) * np.dot(X.T, dZ1)
         db1 = (1 / rows) * np.sum(dZ1, axis=0, keepdims=True)
         
@@ -94,18 +94,18 @@ class NeuralNetwork:
 
 
 
-    def relu(self, x):
+    def _relu(self, x):
         '''Negative values turn into zero'''
         return np.maximum(0,x)
     
-    def relu_derivative(self, x):
+    def _relu_derivative(self, x):
         '''Returns 0 or 1'''
         return np.where(x > 0, 1, 0)
     
-    def sigmoid(self, x):
+    def _sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
     
-    def softmax(self, x):
+    def _softmax(self, x):
         ''''Returns probability of the guess'''
         e_x = np.exp(x - np.max(x, axis=-1, keepdims=True))
         return e_x / np.sum(e_x, axis=-1, keepdims=True)
