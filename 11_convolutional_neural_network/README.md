@@ -1,16 +1,15 @@
 # 🧠 2D Convolutional Neural Network from Scratch
 
-A first-principles, framework-less implementation of a 2D Convolutional Neural Network (CNN) built entirely in **NumPy** and **SciPy**. This project demonstrates the explicit matrix calculus, spatial manipulation, and tensor adjustments required to build, train, and test an image classification pipeline on the MNIST dataset without relying on PyTorch or TensorFlow.
+A clean, framework-free implementation of a 2D Convolutional Neural Network (CNN) built entirely using **NumPy** and **SciPy**. This project demonstrates a deep, first-principles understanding of deep learning mathematics, forward/backward propagation, spatial feature extraction, and matrix manipulation—all without relying on high-level frameworks like PyTorch or TensorFlow.
 
 ---
 
 ## 🛠️ Key Architectural Elements
 
-* **Unified Network Pipeline (`CompleteCNN`)**: Consolidates the complete deep learning lifecycle into a clean, single-class interface (`forward(x_sample)` and `backward(y_label)`).
-* **Valid 2D Cross-Correlation**: Leverages SciPy's spatial tools to scan multi-channel inputs and collapse spatial coordinates down into localized high-dimensional feature maps.
-* **Integrated ReLU Activation**: Embedded directly within the feature extractor to introduce non-linear mapping boundaries while preserving pre-activation values for exact gradient matching.
-* **Flattening / Spatial Reconstruction Bridge**: Dynamically translates 3D feature arrays into 1D vectors for classification, and seamlessly reshapes downstream error gradients back into 3D tensors during backpropagation.
-* **Stable Softmax Classifier**: Maps raw dense output logs into scaled percentages between $0\%$ and $100\%$, utilizing maximum-value scaling offsets to mitigate numerical overflow errors.
+* **End-to-End Pipeline (`CompleteCNN`)**: Encapsulates the entire model lifecycle within a clean, production-ready class interface containing straightforward `forward()` and `backward()` operations.
+* **Vectorized Max Pooling**: Utilizes high-performance, multi-dimensional array reshaping to perform fast max-pooling, cutting down execution time during training.
+* **Stable Softmax Activation**: Implements numerical stability trick (maximum-value scaling offsets) to prevent overflow/underflow errors during probability distribution mapping.
+* **Dynamic Weight Initialization**: Built to safely handle input dimensions lazily, preventing shape mismatches if input sizes change.
 
 ---
 
@@ -19,19 +18,17 @@ A first-principles, framework-less implementation of a 2D Convolutional Neural N
 ### 1. The Forward Pass
 
 ```
-Raw Image (1, 28, 28) ──> [ 2D Convolutions ] ──> Raw Feature Maps
-                                                        │
-  1D Logits Vector    <── [ Dense Layer ] <── Flatten 3D <── [ ReLU Activation ]
-         │
-         └──> [ Softmax Function ] ──> Class Probabilities (0-9)
+Raw Image (1, 28, 28) ──> [ 2D Convolutions ] ──> [ ReLU Activation ]
+                                                            │
+  Final Probabilities   <── [ Softmax ] <── [ Dense Layer ] <── Flatten Layer
 
 ```
 
-### 2. The Backward Pass (Weight Updates)
+### 2. The Backward Pass (Backpropagation)
 
-* **Softmax Error Calculation**: Computes the baseline penalty vectors by adjusting the active target distribution index ($\text{Probability} - 1.0$).
-* **Dense Matrix Chain Rule**: Calculates weight adjustments through outer dot products while pushing incoming blame vectors back toward the flattening boundary.
-* **The `'full'` Correlation Reversal**: To route errors back through the convolutional layers, the script implements a specialized `'full'` padding mode. This mathematically inflates the shrunk gradient grids back into the exact $28 \times 28$ spatial size of the original input.
+* **Softmax Gradient**: Computes loss penalties smoothly ($\text{Probability} - 1.0$) for the cross-entropy loss function.
+* **Dense Layer Backpropagation**: Computes weight and bias gradients using matrix dot products and applies a dynamic dropout mask.
+* **Transposed Convolution Logic**: Routes error gradients back through convolutional layers using SciPy's `'full'` correlation mode, restoring the original $28 \times 28$ spatial dimensions for subsequent iterations.
 
 ---
 
@@ -41,12 +38,14 @@ Raw Image (1, 28, 28) ──> [ 2D Convolutions ] ──> Raw Feature Maps
 11_convolutional_neural_network/
 │
 ├── src/
-│   ├── cnn.py                  # Single-class CompleteCNN architecture
-│   ├── data_preprocessing.py   # IDX binary parsing, normalization, & OpenCV rendering
-│   ├── save_model.py           # Serialized weight freezing (save_model/load_model)
-│   ├── train.py                # Model training execution pipeline
-│   └── test.py                 # Weight unfreezing, evaluation loop, & failure display
-├── requirements.txt            # Project environment constraints
+│   ├── cnn.py                  # Core CNN architecture class
+│   ├── data_preprocessing.py   # IDX binary parsing, normalization, & image formatting
+│   ├── save_model.py           # Model serialization utilities (save/load weights)
+│   ├── train.py                # Model training loop pipeline
+│   ├── test.py                 # Evaluation loop & metrics reporting
+│   └── predict.py              # CLI inference utility for single custom images
+├── added_images/               # Local storage for custom testing images
+├── requirements.txt            # Project environment dependencies
 └── README.md                   # Project documentation
 
 ```
@@ -55,13 +54,13 @@ Raw Image (1, 28, 28) ──> [ 2D Convolutions ] ──> Raw Feature Maps
 
 ## ⚙️ Setup & Execution
 
-### 1. Dataset Dependency Note
+### 1. Dataset Installation
 
-> 💾 **Data Source:** Raw MNIST data files are not hosted in this repository due to footprint limitations. Before executing, download the binary files (`train-images.idx3-ubyte`, `train-labels.idx1-ubyte`, `t10k-images.idx3-ubyte`, `t10k-labels.idx1-ubyte`) from the [Official MNIST Database](http://yann.lecun.com/exdb/mnist/) and extract them into your local `data/MNIST/` repository directory path.
+> 💾 **Data Source:** Download the raw MNIST binary files (`train-images.idx3-ubyte`, `train-labels.idx1-ubyte`, etc.) from the [Official MNIST Database](http://yann.lecun.com/exdb/mnist/) and place them in a local `data/MNIST/` directory.
 
-### 2. Installation
+### 2. Environment Setup
 
-Initialize dependencies within an isolated project virtual environment:
+Initialize dependencies within an isolated virtual environment:
 
 ```bash
 pip install -r requirements.txt
@@ -70,28 +69,35 @@ pip install -r requirements.txt
 
 ### 3. Training the Model
 
-Run the core pipeline to train the weights across your localized training splits:
+Train the network weights from scratch across the training data split:
 
 ```bash
 python src/train.py
 
 ```
 
-### 4. Running Evaluations & Visualizing Failures
+### 4. Running Evaluations
 
-Execute the test loader script to pull down your saved `CNN_weights.pkl` matrix values, evaluate test dataset accuracy, and isolate misclassified samples.
-
-Press `q` within the OpenCV window frame to cycle through error readouts:
+Evaluate test dataset accuracy, extract performance statistics, and view error readouts:
 
 ```bash
-python src/test_loader.py
+python src/test.py
+
+```
+
+### 5. Running Inference on Custom Images
+
+Use the newly added prediction pipeline to run single-image inference on your own custom JPEG images:
+
+```bash
+python src/predict.py
 
 ```
 
 ---
 
-## 🎯 Validation Metrics & Insights
+## 🎯 Engineering Insights & Edge Cases Handled
 
-* **The Squeeze Transformation**: Input arrays must be explicitly structured as 4D tensors `(Samples, Channels, Height, Width)` at initialization. Passing flat or raw 2D pixel strips collapses the spatial alignment indices, breaking the internal multi-channel loop routines.
-* **Value Range Controls**: Grayscale inputs are normalized down to float vectors bounded between `0.0` and `1.0`. Removing this division step causes the dot products inside the dense layers to instantly blow up, resulting in catastrophic gradient explosion (`NaN` outputs).
-* **Failure Windowing**: The tracking script appends true versus predicted mismatch indicators directly into the rendering title bar (`"True: 7 | Pred: 2"`), enabling granular tracking of handwriting ambiguities that trip up the network.
+* **Robust Shape Handling:** Refactored the core matrix operations to safely process odd-shaped images. The pooling layers automatically handle dimensions not perfectly divisible by the pool size without crashing.
+* **Input Preprocessing & Normalization:** Standardizes inputs to `(1, 28, 28)` grayscale tensors and normalizes pixel values to `[0.0, 1.0]`. This stabilizes matrix products and prevents gradient explosion (`NaN` values).
+* **Lazy Weight Allocation:** The dense layer automatically determines flattening dimensions on the first forward pass, creating a robust, adaptable system design.
