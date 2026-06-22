@@ -3,7 +3,6 @@ import torch
 
 def test_model(model, test_loader, device):
     model.eval()
-    model.eval()
 
     correct_predictions = 0
     total_samples = 0

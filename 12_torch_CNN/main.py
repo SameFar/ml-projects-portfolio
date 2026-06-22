@@ -1,6 +1,6 @@
 import logging
 import torch
-from src import get_train_val_loaders, get_test_loader, train_model, make_logger, IntelCNN, save_model, load_model, test_model
+from src import *
 
 device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
