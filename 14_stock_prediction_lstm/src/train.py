@@ -7,7 +7,7 @@ def train(train_loader, eval_loader, model):
 
     EPOCH = 1000
     criterion = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
     save_dir = Path(__file__).resolve().parent.parent / 'model'
     save_path = save_dir / 'model.pt'

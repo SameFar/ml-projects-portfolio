@@ -3,9 +3,9 @@ from pathlib import Path
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
-file_path = Path(__file__).resolve().parent.parent / 'nvidea_stocks2.csv'
+file_path = Path(__file__).resolve().parent.parent / 'nvidea_stocks.csv'
 
-data = np.genfromtxt(file_path, delimiter=',', skip_header=1, usecols=(1, 2, 3, 4), dtype=float)
+data = np.genfromtxt(file_path, delimiter=',',dtype=float)
 
 def train_test_split(data=data, train_size=0.7, timestep=50):
     split_line = int(len(data) * train_size)

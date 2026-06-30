@@ -1,14 +1,10 @@
-Here is a clean, comprehensive, and professional `README.md` for your stock prediction project, styled exactly like your reference example.
-
----
-
 # Deep Learning LSTM for NVDA Stock Prediction
 
-A custom PyTorch Deep Learning project that predicts the opening price of NVIDIA (`NVDA`) stock using a sequential Long Short-Term Memory (LSTM) network trained on engineered historical market data.
+A custom PyTorch Deep Learning project that predicts the opening price of NVIDIA (`NVDA`) stock using a sequential Long Short-Term Memory (LSTM) network trained on scale-invariant historical market data.
 
 ## 📌 Overview
 
-This project implements a sequence-to-scalar architecture designed to process multi-variable historical stock features over a continuous lookback window. Given **50 consecutive trading days** of engineered market indicators, the network predicts the opening price of the next upcoming trading session.
+This project implements a sequence-to-scalar architecture designed to process multi-variable historical stock features over a continuous lookback window. Given **50 consecutive trading days** of engineered market indicators, the network predicts the **log return** of the next upcoming trading session, which is then projected onto the current day's raw close price to calculate the absolute dollar value.
 
 > ⚠️ **Important Data & Pipeline Notice:** Due to an unresolved system multi-threading conflict between the native `yfinance` C-downloader backend and local terminal environments (causing hard `Segmentation fault (core dumped)` errors in raw `.py` scripts), **the data pipeline is managed via Jupyter Notebooks (`.ipynb`)**. Running the downloads within a notebook context bypasses this memory-allocation glitch.
 
@@ -16,17 +12,17 @@ This project implements a sequence-to-scalar architecture designed to process mu
 
 Built explicitly using **PyTorch**, the model parses spatial-temporal sequence dynamics from scratch:
 
-* **Input Size:** Takes a 3D feature tensor of size `(Batch, 50, 3)` containing daily engineered features.
-* **Recurrent Layer (`StockLSTM`):** A single-layer Long Short-Term Memory network with a hidden layer state of `50` units to retain temporal dependencies over long dependencies without vanishing gradients.
-* **Output Layer:** A Linear mapping unit outputting a single scaled scalar value representing the target raw feature (`Next_Open`).
+* **Input Size:** Takes a 3D feature tensor of size `(Batch, 51, 3)` containing a 50-day lookback window *plus* the current target day's metrics.
+* **Recurrent Layer (`StockLSTM`):** A single-layer Long Short-Term Memory network with a hidden layer state of `50` units to retain temporal dependencies over long sequences without vanishing gradients.
+* **Output Layer:** A Linear mapping unit outputting a single unclamped scalar value representing the predicted next-day log return.
 
 ## 📊 Engineered Features
 
-To help the model learn patterns effectively, raw prices are engineered into normalized metrics inside the notebook pipeline:
+To eliminate global scaling dependencies and prevent historical ceilings, raw data is transformed into stationary, scale-invariant metrics inside the notebook pipeline:
 
 1. **Volatility:** $\log(\text{High} / \text{Low})$ — tracks daily price range expansion.
 2. **Log Returns:** $\log(\text{Close} / \text{Close}_{t-1})$ — standardizes price movement independent of total dollar scale.
-3. **Volume:** Min-Max scaled trading volume to standardize liquidity surges.
+3. **Volume (Rolling Percentage Change):** $\text{Volume} / \text{Volume}_{20\text{-day rolling mean}} - 1$ — scales liquidity surges relative to recent trends, keeping numbers small and balanced with return features without relying on static Min/Max metrics.
 
 ## 🧰 Tech Stack & Tools
 
@@ -36,9 +32,10 @@ To help the model learn patterns effectively, raw prices are engineered into nor
 
 ## 🚀 Key Engineering Highlights
 
-* **Robust Data Alignment:** Fixes traditional lookback bugs by aligning a pre-shifted target parameter (`Next_Open`) precisely with the final chronological timestamp index row of the sequence block.
-* **Train/Test Lookback Cushion:** Implemented a boundary overlap mechanism inside the dataset split function, giving the evaluation set a 50-day background context slice so that `eval_loader` never suffers from empty-batch allocations.
-* **Isolated Local Inference:** Features an inference mode that bypasses live network scrapers completely, pulling processed telemetry records directly from a local CSV database to predict upcoming opens reliably.
+* **Adaptive Feature Normalization:** Replaced global MinMax scaling with rolling, localized preprocessing. The network can seamlessly generalize to unprecedented price targets (e.g., predicting a rise to \$180 even if trained entirely on sub-\$60 data).
+* **Inclusive Window Slicing:** Corrected lookback extraction arrays to explicitly include the target execution day's closing data (`target_idx + 1`), ensuring the model evaluates up-to-the-minute market data before executing tomorrow's prediction.
+* **Robust Price Reconstruction:** Real USD targets are recovered dynamically via exponential progression: 
+  $$\text{Predicted Open}_{t+1} = \text{Actual Close}_t \times e^{\text{Predicted Return}}$$
 
 ## 📊 Getting Started & Workflow
 
@@ -49,14 +46,14 @@ Because of the network wrapper constraints, you must follow this exact step-by-s
 Before launching the Python CLI, you must populate your tracking files by opening your IDE and executing **both `.ipynb` notebooks**:
 
 * Run the data notebook to pull down NVDA market metrics safely without core-dumping.
-* This will successfully export your cleaned, normalized parameters out into `.parent.parent/nvidea_stocks2.csv`.
+* This will successfully export your cleaned parameters and absolute raw close values out into the same dir ectory as `main.py`.
 
 ### 2. Live Prediction Bounds
 
-To run a successful, non-crashing validation check on the model, **you must use target dates between February 20, 2026, and May 1, 2026**.
+To run a successful, non-crashing validation check on the model, **you must use target dates supported by your CSV export**.
 
 * The model requires 50 historical trading days *prior* to your target date to construct its timeline array.
-* Ensure you attempt predictions **only when the stock market is open** or when a valid trading period is accurately captured within the CSV boundaries.
+* Ensure you attempt predictions **only when a valid trading period** is accurately captured within the CSV boundaries.
 
 ### 3. Execution
 
@@ -65,7 +62,9 @@ Launch the core command-line application interface to train or predict:
 ```bash
 python main.py
 
-```
 
-* Enter `t` to split your local CSV data, structure training pipelines, and execute backpropagation training over **1,000 epochs**. Weights are auto-saved to `model/model.pt`.
-* Enter **any other key** to skip training, load the last saved weight profile, pull the trailing lookback frame from your CSV, and predict the next day's market open in real USD.
+## ⚠️ Disclaimer
+
+**Financial Disclaimer:** This project is purely for educational, portfolio, and research purposes. It is **not** financial advice, nor is it a reliable tool for live market trading. Stock markets are highly volatile, chaotic systems influenced by infinite macroeconomic variables, human sentiment, and unpredictable events that a basic sequential network cannot anticipate. 
+
+The historical performance and metrics generated by this LSTM model do not guarantee future results. **Do not use this repository, its code, or its predictions to make real-world financial investments or trades.** Any financial losses incurred from using this software are entirely the responsibility of the user. Trade at your own risk.
