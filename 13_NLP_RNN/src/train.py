@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from .data_processing import train_test_split
 import logging
 
-def train(rnn, data, n_epoch = 45, n_batch_size = 64, report_every = 5, learning_rate = 0.2, criterion = nn.NLLLoss(), export_path="char_rnn.pt"):
+def train(rnn, data, n_epoch = 100, n_batch_size = 64, report_every = 5, learning_rate = 0.05, criterion = nn.NLLLoss(), export_path="char_rnn.pt"):
     """
     Learn on a batch of training_data for a specified number of iterations and reporting thresholds
     """
@@ -55,7 +55,7 @@ def train(rnn, data, n_epoch = 45, n_batch_size = 64, report_every = 5, learning
 
         all_losses.append(current_loss / len(train_loader))
         
-        rnn.eval()
+        rnn.eval() # Switch to Evaluation
         correct = 0
         total = 0
         
