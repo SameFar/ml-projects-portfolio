@@ -3,7 +3,7 @@ import torch
 import torch.optim as optim
 from .save_model import save_model
 
-def train(model, dataloader, epochs=10, lr=0.0001):
+def train(model, dataloader, epochs=20, lr=0.0001):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info(f"Training context initialized on target device: {device}")
     model.to(device)
