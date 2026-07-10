@@ -1,47 +1,43 @@
-# Multi-Paradigm Breast Cancer Classification & Consensus Ensemble
+# Breast Cancer Classification — 8-Model Consensus Ensemble
 
-An end-to-end machine learning pipeline implementing a heterogeneous threshold-consensus ensemble across **8 distinct algorithmic families**. This repository demonstrates production-grade engineering patterns, including asymmetric preprocessing pipelines, automated feature selection, and a clinical-grade risk-averse inference engine.
+Classifies breast tumor biopsies as malignant or benign using the classic [Wisconsin breast cancer dataset](https://www.kaggle.com/datasets/uciml/breast-cancer-wisconsin-data). Instead of picking one model, this trains eight different classifiers and combines their votes into a single conservative decision.
 
----
+## How it works
 
-## 🏗️ Architecture Design & Engineering Patterns
+The data is 569 biopsy samples with 30 measured features (radius, texture, smoothness, etc.), each computed as mean/standard-error/worst across cell nuclei in the sample. Five features with very low correlation to the diagnosis (`|r| < 0.01`, things like `texture_se` and `fractal_dimension_mean`) get dropped, leaving 25 features.
 
-Rather than applying a generic blanket pipeline, the system utilizes a split-architecture approach to optimize data structures based on mathematical assumptions of the underlying model families:
+The eight models split into two groups that get different preprocessing:
 
-* **Asymmetric Preprocessing Pipelines:** * **Distance & Gradient-Based Models** (*Logistic Regression, SVC, SGD, KNN, Naive Bayes*): Data is dynamically transformed via a `Yeo-Johnson PowerTransformer` to minimize skew, followed by an `IsolationForest` wrapper to dynamically prune extreme leverage points.
-  * **Tree-Based Models** (*Decision Trees, Random Forests, XGBoost*): Processed using the raw input distribution, preserving data splitting criteria and avoiding unnecessary computation on scale-invariant architectures.
-* **Dynamic Feature Selection:** The inference pipeline enforces strict input validation against a 25-dimensional structural measurement matrix. It programmatically drops low-correlation attributes ($|r| < 0.01$) dynamically before processing to reduce feature noise and mitigate the curse of dimensionality.
-* **Clinical Sensitivity Tuning (Ensemble Vote):** To simulate a real-world clinical decision-support system, the inference engine replaces standard majority voting with a conservative risk-averse threshold (`vote > 3`). If 4 or more of the 8 models flag malignancy, the final output forces a **Malignant** classification—heavily penalizing false negatives to optimize patient safety in screening diagnostics.
+- **Distance/gradient-based models** (Logistic Regression, SGD, SVC, KNN, Naive Bayes): fit on data that's been passed through a Yeo-Johnson power transform (to reduce skew) and had outliers stripped out with an `IsolationForest` (7% contamination) beforehand. These models care about scale and are sensitive to leverage points, so they get the cleanup.
+- **Tree-based models** (Random Forest, XGBoost, Decision Tree): fit on the raw, untransformed data, since trees split on thresholds and don't care about scale or a handful of outliers.
 
----
+`src/main.py` runs an 80/20 stratified train/test split, trains all eight, scores each on accuracy/precision/recall/F1, writes the comparison table to `results/results.txt`, and pickles every trained model into `saved_models/`.
 
-## 📊 Performance Metric Summary
+`src/predict.py` loads all eight saved models and runs a sample through every one of them. Instead of majority vote, the final call is a conservative threshold: if 4 or more of the 8 models flag "malignant," the case is called malignant. The idea is to bias the whole system toward catching more true positives at the cost of some false alarms, which is generally what you'd want in a screening context.
 
-Inside results folder
+## Results
 
-### 💡 Core Engineering Takeaways
-1. **Occam's Razor in High-Dimensional Space:** Regularized Logistic Regression outperformed complex tree ensembles. This indicates that once heavy feature skewness is mathematically stabilized, the underlying decision boundary is predominantly linear.
-2. **Consensus Regularization:** While standalone tree models underperformed due to variance, their integration into the conservative consensus wrapper acts as an algorithmic buffer, catching edge cases where distance estimation models hit margin limitations.
+From `results/results.txt` (test set, 20% holdout):
 
----
+| Model | Accuracy | Precision | Recall | F1 |
+| --- | --- | --- | --- | --- |
+| Logistic Regression | 0.9912 | 0.9913 | 0.9912 | 0.9912 |
+| SGD | 0.9912 | 0.9913 | 0.9912 | 0.9912 |
+| SVC | 0.9912 | 0.9913 | 0.9912 | 0.9912 |
+| Naive Bayes | 0.9825 | 0.9825 | 0.9825 | 0.9825 |
+| XGBoost | 0.9649 | 0.9668 | 0.9649 | 0.9645 |
+| Random Forest | 0.9649 | 0.9668 | 0.9649 | 0.9645 |
+| KNN | 0.9561 | 0.9569 | 0.9561 | 0.9558 |
+| Decision Tree | 0.9298 | 0.9297 | 0.9298 | 0.9294 |
 
-## 🚀 Deployment & Execution Guide
+The three models on Yeo-Johnson-transformed, outlier-cleaned data (Logistic Regression, SGD, SVC) came out on top — once the skew is stabilized, the decision boundary between malignant and benign is mostly linear, so the simpler linear/margin-based models edge out the tree ensembles here.
 
-Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder:
+## Getting started
+
 ```bash
 uv sync
+uv run src/main.py       # trains all 8 models, writes results/results.txt and saved_models/*.pkl
+uv run src/predict.py    # loads the saved models and runs the ensemble vote on data/sample.csv
 ```
 
-### 1. Training Pipeline
-To execute the end-to-end training pipeline, optimize hyperparameters, and serialize the binary weights (`.pkl`/`.onnx` format):
-
-```bash
-uv run src/main.py
-```
-
-### 2. Production Inference & Prediction
-Before executing the prediction file, you must edit `data/sample.csv` and populate it with real, unstructured patient values matching the 25 required features (e.g., radius_mean, texture_worst, etc.) for the engine to evaluate.
-
-```bash
-uv run src/predict.py
-```
+`src/predict.py` expects `data/sample.csv` to contain rows with the 25 features listed in `EXPECTED_FEATURES` in that file — it picks a random row from that CSV and prints each model's vote plus the final consensus call.

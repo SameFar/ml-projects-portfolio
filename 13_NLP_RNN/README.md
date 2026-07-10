@@ -1,50 +1,29 @@
 # Character-Level RNN for Name Origin Classification
 
-A custom PyTorch Deep Learning project that predicts the country of origin (1 of 18 languages) for a given surname using a character-level Recurrent Neural Network (RNN).
+This project guesses which language a surname comes from, one character at a time. Give it a name like `Nakamura` or `O'Brien` and it'll predict which of 18 languages it most likely originated from. No pretrained embeddings, no tokenizer — just a plain RNN reading the name letter by letter.
 
-## 📌 Overview
+## How it works
 
-Instead of using high-level embeddings or heavy pre-trained models, this project processes text at the **character level from scratch**. It normalizes raw, accented text into standard ASCII, maps characters to one-hot encoded tensors, and feeds them sequentially through a custom RNN to classify the name's language of origin (e.g., `Nakamura` $\rightarrow$ `Japanese`).
+1. **Data**: `data/names/` has one `.txt` file per language (18 files — Arabic, Chinese, Czech, Dutch, English, French, German, Greek, Irish, Italian, Japanese, Korean, Polish, Portuguese, Russian, Scottish, Spanish, Vietnamese), one surname per line.
+2. **Preprocessing**: each name is normalized down to a fixed 58-character alphabet — the 52 upper/lowercase ASCII letters plus `` .,;'_``. Accented characters get stripped down to their closest ASCII equivalent (`speak_merican()` in `src/data_processing.py`), and anything still outside the alphabet gets mapped to `_`. Each name then becomes a sequence of one-hot vectors, one per character.
+3. **Model** (`src/RNN.py`): a single `nn.RNN` layer (input size 58, hidden size 128) reads the character sequence, and its final hidden state goes through a Linear layer down to 18 outputs, followed by `LogSoftmax`.
+4. **Training** (`src/train.py`): `NLLLoss` with plain SGD (lr `0.05`), 100 epochs by default, batch size 64, an 85/15 train/validation split, and gradient norm clipping at 3. Validation accuracy gets printed to the console every 5 epochs. Weights are saved to `model/model.pt`, and a loss curve is plotted (via matplotlib) at the end of training — it's shown on screen, not saved to disk.
+5. **Inference** (`src/guess.py`): loads `model/model.pt` into a fresh `CharRNN` and returns the highest-scoring language for a given name.
 
-## 🛠️ Model Architecture
+A trained checkpoint already ships in `model/model.pt`, so you can jump straight to inference without training first.
 
-Built explicitly using **PyTorch**, the model handles sequence data without third-party abstraction:
+## A quirk worth knowing about
 
-* **Input Layer:** Takes a one-hot encoded tensor of size `58` (representing unique allowed characters).
-* **Recurrent Layer (`nn.RNN`):** A single-layer standard RNN with a hidden size of `128` to maintain sequential context.
-* **Output Layer:** A Linear layer mapped to `18` units (representing the 18 target language classes) followed by a `LogSoftmax` activation function.
+The language-to-index mapping used during training comes from `list(set(...))` over the filenames in `data/names/` — and Python randomizes string hashing per process by default, so that set's iteration order isn't stable across runs. `src/guess.py`, meanwhile, hardcodes its own fixed list of the 18 languages in a specific order. If you retrain the model, there's no guarantee the class indices it learns will line up with `guess.py`'s hardcoded list, so predictions could come out mislabeled. This doesn't affect the shipped `model/model.pt` as long as nobody retrains it, but it's a real fragility in the code as written.
 
-## 🧰 Tech Stack & Tools
+## Getting started
 
-* **Core:** Python, PyTorch
-* **Data Processing:** Standard `unicodedata` for text normalization
-* **Evaluation:** Matplotlib (loss curve tracking), Standard Python `logging` library
-
-## 🚀 Key Engineering Highlights
-
-* **Robust Custom Dataset:** Implemented a custom PyTorch `Dataset` wrapper (`NamesDataset`) that parses `.txt` files on the fly, dynamically tracks the unique classes, and caches text and labels into tensors.
-* **Custom Batching & Collate:** Utilized a tailored `DataLoader` configuration with custom batching logic to safely step through individual sequences without uniform padding overcomplications.
-* **Text Sanitization Pipeline:** Built a custom pipeline to normalize Unicode strings down to standard ASCII, handling out-of-vocabulary characters gracefully.
-* **Solid Training Hygiene:** Features a proper validation split (`85/15`), gradient clipping (`clip_grad_norm_`) to prevent exploding gradients, and automated model checkpointing (`.pt` exports).
-
-## 📊 Getting Started
-
-### 1. Installation & Data
-
-Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder:
 ```bash
 uv sync
-```
-Target `.txt` files already live inside `data/names/`, one file per label (e.g., `Arabic.txt`, `Italian.txt`).
-
-### 2. Execution
-
-Run the main script to interface with the CLI wrapper:
-
-```bash
 uv run main.py
-
 ```
 
-* Press `y` to execute training over 45 epochs. It will automatically log average batch loss, compute validation accuracy, and plot your training curve.
-* Press `n` to enter inference mode and guess the origin of any input string using your saved weights.
+You'll be prompted:
+- `y` — trains a fresh model on `data/names/`, plots the loss curve, and saves weights to `model/model.pt`. The program exits after training finishes (it doesn't loop back to the menu).
+- `n` — asks for a name, prints the predicted language of origin using the saved `model/model.pt`, then asks again.
+- anything else — exits.

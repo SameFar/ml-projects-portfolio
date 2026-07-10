@@ -1,38 +1,61 @@
-# Project Name: Imbalanced Anomaly Detection: Credit Card Fraud via XGBoost
+# Credit Card Fraud Detection
 
-A production-grade classification pipeline utilizing feature engineering and optimized gradient boosting to securely identify fraudulent credit card transactions.
+An XGBoost classifier that flags fraudulent credit card transactions in the
+[Kaggle credit card fraud dataset](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud).
+Fraud is a tiny fraction of the data (492 out of roughly 284,000
+transactions), so the interesting part of this project is handling that
+imbalance rather than the model itself.
 
-## 💡 The Quirk & Learning Objective
-This milestone shifts focus from standard datasets to **the challenges of extreme class imbalance (0.17% target frequency)**. 
+## How it works
 
-To solve this, I designed a multi-step pipeline focused on optimization, signal processing, and target metrics:
-* **Cyclical Temporal Mapping:** Transformed linear transaction timestamps into standard harmonic dimensions using sine/cosine frequency modulations:
-  $$\text{Hour}_{\text{sin}} = \sin\left(\frac{2\pi \cdot \text{Hour}}{24}\right), \quad \text{Hour}_{\text{cos}} = \cos\left(\frac{2\pi \cdot \text{Hour}}{24}\right)$$
-  This teaches tree ensembles that hour 23 and hour 00 are temporally adjacent.
-* **KDE Divergence Pruning:** Generated full-scale Kernel Density Estimate comparisons for all variables. Features where the fraudulent and valid distributions converged completely (e.g., `V13`, `V15`) were dropped as zero-variance noise to streamline calculation and prevent overfitting.
-* **False Negative Risk Minimization:** Engineered a multi-metric custom `GridSearchCV` harness. While tracking both precision and recall, the pipeline explicitly refits hyperparameter matrices based on **Recall optimization**, ensuring the model prioritizes identifying actual anomalies.
+1. **Load the data** - `data/creditcard.csv` is loaded, deduplicated, and
+   cleaned of nulls.
+2. **Feature engineering**
+   - `Time` (seconds since the first transaction) is converted to an hour of
+     day, then encoded as `Hour_sin` / `Hour_cos` so the model sees hour 23
+     and hour 0 as adjacent instead of far apart.
+   - `Amount` is log-transformed (`LogAmount`) to tame its skew.
+   - `Time`, `Amount`, `Hour`, and the PCA components `V13`, `V15`, `V20`,
+     `V22`, `V23`, `V25`, `V28` are dropped — an exploratory KDE comparison
+     (see `FraudDetection.ipynb`) showed the fraud/non-fraud distributions on
+     those columns basically overlap, so they're not adding signal.
+3. **Model** - A `Pipeline` of `RobustScaler` (less sensitive to the extreme
+   outliers fraud creates) followed by an `XGBClassifier`
+   (`learning_rate=0.15`, `max_depth=7`, `n_estimators=1000`).
+4. **Split & evaluate** - An 80/20 train/test split, then precision, recall,
+   and a confusion matrix on the held-out set.
 
-## 📁 Repository Structure
-* `portfolio_notebook.ipynb`: Exploratory notebook containing full data distribution visualizations, density overlap analysis, and initial metric tracking.
-* `src/`: Clean, production-ready modules.
-  * `data_loader.py`: Processes file pathways, applies cyclical maps, and strips uninformative features.
-  * `model.py`: Instantiates scaling pipelines and grid-search wrappers.
-  * `train.py`: Coordinates the workflow, logs exact matrix outcomes, and generates visualization charts.
-* `results/`: Performance documentation directory.
-  * `results.txt`: Text logs detailing dataset counts, explicit precision records, and targeted recall achievements.
-  * `confusion_matrix.png`: Annotated validation matrix tracking true positives versus missed alerts.
+`src/model.py` also defines a `GridSearchCV` wrapper (`get_grid_search`) that
+tunes over `n_estimators`, `max_depth`, and `learning_rate`, tracking
+precision but refitting on recall — but `src/main.py` currently only runs the
+untuned baseline pipeline, not the grid search.
 
-## 📊 Performance Records & Analysis
-The baseline model achieves excellent classification control over the unbalanced testing set:
-* **Precision:** `94.44%` (Minimizing false positives that disrupt clean user transactions)
-* **Recall:** `75.56%` (Successfully capturing the majority of anomalous attacks)
+There's a second notebook, `FraudDetection-Isolation.ipynb`, exploring an
+Isolation Forest approach to the same problem, separate from the XGBoost
+pipeline `src/main.py` runs.
 
-For full parameter settings and a detailed look at the true/false count distributions, refer to `results/results.txt`.
+## Results
 
-## 🚀 Execution & Portability
-This repository uses entirely relative path configurations. It will run out of the box on any device without modifying directory locations. Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder.
+From `results/results.txt`, on 56,746 held-out transactions:
 
-Install dependencies and run:
+- Precision: 0.9701
+- Recall: 0.7222
+- True negatives: 56,654
+- False positives: 2
+- False negatives (missed fraud): 25
+- True positives (fraud caught): 65
+
+`results/confusion_matrix.png` has the heatmap version.
+
+## Getting started
+
+You'll need `data/creditcard.csv` from the
+[Kaggle dataset page](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud)
+first.
+
 ```bash
 uv sync
 uv run src/main.py
+```
+
+This writes `results/results.txt` and `results/confusion_matrix.png`.

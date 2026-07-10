@@ -1,34 +1,43 @@
-# Project Name: California Housing Price Regression via Scikit-Learn Pipelines
+# California Housing Regression
 
-A modular regression project utilizing an optimized scikit-learn Pipeline structure to predict median house values using the California Housing dataset. 
+A scikit-learn pipeline that predicts median house values from the built-in
+California Housing dataset. The focus here was building a clean `Pipeline`
+that handles outliers and skew properly instead of just throwing a model at
+raw features.
 
-## 💡 The Quirk & Learning Objective
-For this milestone in my portfolio, **the core emphasis was mastering complex feature transformations and deploying scikit-learn's native Histogram-Based Gradient Boosting algorithm while preventing data leakage.**
+## How it works
 
-Key elements focused on during this iteration:
-* **Robust Table Cleaning:** Implemented an automated global Interquartile Range (IQR) masking routine to strip erratic outlier records out of continuous feature sets.
-* **Leakage-Proof Pipeline Construction:** Used an encapsulation pipeline to pass variables through a non-linear `QuantileTransformer` (mapping outputs to a gaussian distribution) ensuring data transformations are isolated strictly to cross-validation splits.
-* **Logarithmic Target Scaling:** Addressed variance skew by applying a mathematical $y = \log(1 + x)$ adjustment to stabilize gradient steps across regression sweeps.
+1. **Load the data** - `sklearn.datasets.fetch_california_housing` pulls the
+   dataset directly (scikit-learn downloads and caches it on first run, so
+   there's no local data file to manage).
+2. **Remove outliers** - Any row where a feature falls outside 1.5x the IQR
+   (interquartile range) for that column gets dropped.
+3. **Transform the target** - The target (`MedHouseVal`) is log-transformed
+   with `log1p` to tame its skew before fitting.
+4. **Pipeline** - A single `sklearn.pipeline.Pipeline` chains a
+   `QuantileTransformer` (mapping features to a normal distribution) into a
+   `HistGradientBoostingRegressor` (`learning_rate=0.05`, `max_depth=6`,
+   `max_iter=800`, `min_samples_leaf=10`, `l2_regularization=0.1`).
+5. **Evaluate** - The pipeline is fit on an 80/20 train/test split, and R2 and
+   RMSE are computed on the (log-scale) test predictions.
 
-## 📁 Repository Structure
-* `HouseLearning.ipynb`: Exploration workbook demonstrating baseline metrics checking, outlier boundaries evaluation, and pipeline assembly verification.
-* `src/`: Isolated production environment components.
-  * `data_loader.py`: Fetches dataset variables, handles IQR removal masks, and splits matrices.
-  * `model.py`: Sets up pipeline definitions and parameter configurations.
-  * `main.py`: Handles model execution, records key outputs to files, and builds verification diagrams.
-* `results/`: Tracking records asset directory.
-  * `results.txt`: Performance tracking sheets listing $R^2$ benchmarks and Root Mean Squared Error (RMSE) readouts.
-  * `prediction_analysis.png`: Scatter plot tracking actual log pricing values against predicted trends.
+## Results
 
-## 📊 Key Results & Insights
-* **The Structural Advantage of HistGradientBoosting:** Native histogram binning handles large tabular features significantly faster than conventional decision tree structures, yielding quick iterations during pipeline passes.
-* **Transformation Gains:** Normalizing feature scaling distributions using a standard quantile map prevented heavily skewed features (like population counts or room metrics) from skewing weight updates.
-* **Terminal Summary:** The completed run achieved an $R^2$ coefficient of **0.XX** (refer to your updated `results/results.txt` for your precise machine output parameters).
+From `results/results.txt`:
 
-## 🚀 Execution & Portability
-This repository relies exclusively on relative path lookups and contains zero environment-specific dependencies. Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder.
+- Train shape: (13473, 8)
+- Test shape: (3369, 8)
+- Test R2: 0.8452
+- Test RMSE (log scale): 0.1330
 
-Install dependencies and run:
+`results/prediction_analysis.png` plots predicted vs. actual log house values
+against a perfect-prediction reference line.
+
+## Getting started
+
 ```bash
 uv sync
 uv run src/main.py
+```
+
+This writes `results/results.txt` and `results/prediction_analysis.png`.

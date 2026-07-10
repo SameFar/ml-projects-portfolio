@@ -1,98 +1,35 @@
----
-
 # Genetically Superior Mario
 
-A reinforcement-adjacent machine learning simulation that trains an ensemble of autonomous agents to navigate a custom platformer level using a Genetic Algorithm (GA).
+A population of little Marios learns to beat a custom platformer level, not through reinforcement learning, but through a genetic algorithm written from scratch in NumPy and Pygame. Every Mario's "brain" is just a fixed sequence of button presses; the ones that get furthest survive, breed, and pass their moves on.
 
-## Overview
+## How it works
 
-This project uses evolutionary computing to optimize player action sequences over successive generations. Agents learn to traverse obstacles and reach target checkpoints through iterative selection and mutation.
+The level is a small ASCII grid in `src/config.py` (`X` for solid tiles, `Y` for checkpoints), turned into rectangles at startup.
 
-The pipeline includes:
+Each Mario's DNA is a `(600, 3)` array of random bits — one row per frame, for up to 600 frames, where the three bits mean jump / left / right. There's no perception involved: a Mario just plays back its own DNA blindly and either gets somewhere or doesn't.
 
-* **Custom Environment:** Lightweight tile-based physics and collision engine built in Pygame.
-* **Vectorized Genetic Logic:** Genome generation and mutation masks powered by NumPy.
-* **Multi-Point Crossover:** Chronological behavioral splicing across parent chromosomes.
-* **Stagnation Control:** Dynamic mutation scaling based on population fitness ceilings.
-* **Genotype Serialization:** State-decoupled saving and loading via NumPy binaries.
-
----
-
-## Genetic Pipeline
-
-Key evolutionary steps:
-
-* **Selection:** Top 1.3% of the population (`TOP_X`) selected via elite ranking.
-* **Crossover:** Parents are sampled to produce offspring using a 5-segment chronological split.
-* **Mutation:** Dynamic bit-flip mutation applied via random distribution masks.
-
-```python
-# Adaptive Mutation Scaling
-if stagnant_gen >= 5:
-    MUTATION = 0.05  # Scale up 250% to break out of local optima
+Every generation, all 1000 Marios in the population run at once. A Mario dies early if it falls off the bottom of the screen, goes 90 frames without making progress, or runs out of time (it starts with a small time budget that gets extended every time it reaches a new checkpoint). Once everyone is dead or the 600 frames run out, each Mario gets a fitness score:
 
 ```
+score = 2000 / distance_to_next_goal
+      + checkpoints_reached * 300
+      - 5 if dead else 0
+      + 2000 if all checkpoints reached
+```
 
-This strategy injects behavioral diversity when max fitness stalls, automatically resetting once progress resumes.
+The top ~1.3% of the population (`1000 // 75` = 13 Marios) become the elites. To make the next generation, two random elites are picked as parents, each parent's 600-frame DNA is cut into 5 chronological chunks at random split points, and the child is stitched together by taking each chunk from either mom or dad. Bits are then flipped with some mutation probability.
 
----
+The base mutation rate is 2%. If the best fitness in the population hasn't improved for 5 generations in a row, the mutation rate jumps to 5% to help escape a local optimum, and drops back down once progress resumes. If fitness stays stagnant for 15 generations, or the run reaches 150 generations, the simulation stops.
 
-## Architecture
+## Getting started
 
-### Genotype & Physics Separation
+Controls, while the simulation is running:
 
-The player's AI data (the genome) is strictly isolated from the rendering and physics state (`pygame.Rect`).
+- `F` — toggle headless mode (stop rendering the agents, runs faster)
+- `S` — save the current population's DNA to `saved_model/elite_mario_dna.npy`
+- `L` — load a previously saved DNA pool back in as the current population
 
-* **State Space:** 3-bit binary action array across a fixed frame ceiling (`GENES = 600`).
-* **Fitness Metric:** Vector distance calculation combined with checkpoint collection weightings.
-
-$$Score = \frac{2000}{\text{Distance To Goal}} + (\text{Checkpoints} \times 300) - \text{Death Penalty}$$
-
----
-
-## State Serialization
-
-A lightweight saving mechanism preserves trained models without pickling heavy Pygame objects.
-
-Users can save the current elite DNA pool during execution and reload it to immediately watch optimized runs.
-
----
-
-## Usage
-
-Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder:
 ```bash
 uv sync
-```
-
-### Run Simulation / Train Agents
-
-```bash
 uv run src/main.py
-
 ```
-
-### Controls
-* `F`: Headless mode, save CPU usage by not rendering in the agents
-* `S`: Serialize and save the current elite DNA pool to `elite_mario_dna.npy`.
-* `L`: Load saved DNA binary directly into the current active population.
-
----
-
-## Current Status
-
-* Matrix-based crossover and mutation pipeline implemented
-* Adaptive mutation rates functional
-* State serialization working via NumPy
-* Headless training mode pending integration
-
----
-
-## Tech Stack
-
-* Python
-* NumPy
-* Pygame
-* Pathlib
-
----

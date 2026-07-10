@@ -1,71 +1,48 @@
-# Deep Learning LSTM for NVDA Stock Prediction
+# LSTM for NVDA Stock Prediction
 
-A custom PyTorch Deep Learning project that predicts the opening price of NVIDIA (`NVDA`) stock using a sequential Long Short-Term Memory (LSTM) network trained on scale-invariant historical market data.
+This project tries to predict NVIDIA's (`NVDA`) next-day stock movement from its recent trading history, using an LSTM in PyTorch. It looks at the last 50 trading days of engineered features and predicts the next day's log return, which then gets converted back into a dollar price.
 
-## 📌 Overview
+## How it works
 
-This project implements a sequence-to-scalar architecture designed to process multi-variable historical stock features over a continuous lookback window. Given **50 consecutive trading days** of engineered market indicators, the network predicts the **log return** of the next upcoming trading session, which is then projected onto the current day's raw close price to calculate the absolute dollar value.
+### Data
 
-> ⚠️ **Important Data & Pipeline Notice:** Due to an unresolved system multi-threading conflict between the native `yfinance` C-downloader backend and local terminal environments (causing hard `Segmentation fault (core dumped)` errors in raw `.py` scripts), **the data pipeline is managed via Jupyter Notebooks (`.ipynb`)**. Running the downloads within a notebook context bypasses this memory-allocation glitch.
+Data prep happens in two Jupyter notebooks rather than a plain script:
 
-## 🛠️ Model Architecture
+- `visualise.ipynb` pulls NVDA's OHLCV history from `yfinance` (2021 through early 2026), engineers three features, and writes them out to `nvidea_stocks.csv` (headerless, used for training):
+  - **Volatility**: `log(High / Low)`
+  - **Log returns**: `log(Close / Close_{t-1})`
+  - **Scaled volume**: `Volume / rolling_20day_mean(Volume) - 1`
+  - plus a training target column, next-day log return (`Log_Returns` shifted by -1).
+- `get_prediction_sample.ipynb` does the same feature engineering over a more recent window (Jan-June 2026) and writes `nvidea_stocks_pred.csv`, keeping the `Date` and raw `Close` columns too — this is what `predict.py` reads from at inference time.
 
-Built explicitly using **PyTorch**, the model parses spatial-temporal sequence dynamics from scratch:
+(I originally split this out into notebooks after running into `yfinance` download problems in plain scripts on my machine — worth re-testing if you don't hit the same issue.) Both CSVs already ship in this folder, so you don't need to rerun the notebooks unless you want fresher data.
 
-* **Input Size:** Takes a 3D feature tensor of size `(Batch, 51, 3)` containing a 50-day lookback window *plus* the current target day's metrics.
-* **Recurrent Layer (`StockLSTM`):** A single-layer Long Short-Term Memory network with a hidden layer state of `50` units to retain temporal dependencies over long sequences without vanishing gradients.
-* **Output Layer:** A Linear mapping unit outputting a single unclamped scalar value representing the predicted next-day log return.
+### Model
 
-## 📊 Engineered Features
+`StockLSTM` (`src/stock_lstm.py`) is a single-layer LSTM: input size 3 (volatility, log return, scaled volume), hidden size 50, followed by `Linear(50 → 25)`, `ReLU`, `Linear(25 → 1)`. It takes a window of daily feature rows and outputs one scalar: the predicted log return for the next session.
 
-To eliminate global scaling dependencies and prevent historical ceilings, raw data is transformed into stationary, scale-invariant metrics inside the notebook pipeline:
+### Training (`src/train.py`)
 
-1. **Volatility:** $\log(\text{High} / \text{Low})$ — tracks daily price range expansion.
-2. **Log Returns:** $\log(\text{Close} / \text{Close}_{t-1})$ — standardizes price movement independent of total dollar scale.
-3. **Volume (Rolling Percentage Change):** $\text{Volume} / \text{Volume}_{20\text{-day rolling mean}} - 1$ — scales liquidity surges relative to recent trends, keeping numbers small and balanced with return features without relying on static Min/Max metrics.
+`data_preprocessing.make_loader` slices `nvidea_stocks.csv` into 50-day windows to predict the log-return target at the end of each window (batch size 32, no shuffling). Training uses a 70/30 train/validation split, `MSELoss`, Adam (lr `0.0001`), for 1000 epochs, printing train/validation loss every epoch. Weights are saved to `model/model.pt` (already included, from a prior run).
 
-## 🧰 Tech Stack & Tools
+### Prediction (`src/predict.py`)
 
-* **Core:** Python, PyTorch
-* **Data Retrieval & Analysis:** `yfinance`, Pandas, NumPy
-* **Notebook Runner:** Jupyter Notebooks (for data compilation and file extraction)
+`predict_tomorrow_open()` looks up a target date in `nvidea_stocks_pred.csv`, grabs the 50 trading days before it plus the target day itself (51 rows), and feeds that window into the model. The predicted log return is exponentiated and multiplied by the target day's actual close price to get a dollar estimate — the code labels this "tomorrow's opening price," though the value it's actually reconstructing is closer to a next-day close-to-close estimate, since that's what the model was trained to predict.
 
-## 🚀 Key Engineering Highlights
+The target date has to exist in `nvidea_stocks_pred.csv` and have at least 50 rows of history before it — otherwise it raises `KeyError` or `ValueError` rather than guessing. Right now the target date is hardcoded (`2026-05-20`, which falls inside the CSV's `2026-01-30` to `2026-05-29` range) as a default argument in `predict_tomorrow_open()`; the CLI doesn't currently prompt for a different one, so you'd need to call the function directly or edit the default to check another date.
 
-* **Adaptive Feature Normalization:** Replaced global MinMax scaling with rolling, localized preprocessing. The network can seamlessly generalize to unprecedented price targets (e.g., predicting a rise to \$180 even if trained entirely on sub-\$60 data).
-* **Inclusive Window Slicing:** Corrected lookback extraction arrays to explicitly include the target execution day's closing data (`target_idx + 1`), ensuring the model evaluates up-to-the-minute market data before executing tomorrow's prediction.
-* **Robust Price Reconstruction:** Real USD targets are recovered dynamically via exponential progression: 
-  $$\text{Predicted Open}_{t+1} = \text{Actual Close}_t \times e^{\text{Predicted Return}}$$
-
-## 📊 Getting Started & Workflow
-
-Because of the network wrapper constraints, you must follow this exact step-by-step pipeline sequence to properly build your databases and run predictions.
-
-### 1. Data Compilation (The Notebook Step)
-
-Before launching the Python CLI, you must populate your tracking files by opening your IDE and executing **both `.ipynb` notebooks**:
-
-* Run the data notebook to pull down NVDA market metrics safely without core-dumping.
-* This will successfully export your cleaned parameters and absolute raw close values out into the same dir ectory as `main.py`.
-
-### 2. Live Prediction Bounds
-
-To run a successful, non-crashing validation check on the model, **you must use target dates supported by your CSV export**.
-
-* The model requires 50 historical trading days *prior* to your target date to construct its timeline array.
-* Ensure you attempt predictions **only when a valid trading period** is accurately captured within the CSV boundaries.
-
-### 3. Execution
-
-Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder. Launch the core command-line application interface to train or predict:
+## Getting started
 
 ```bash
 uv sync
 uv run main.py
+```
 
+You'll be prompted:
+- `t` — trains a new model on `nvidea_stocks.csv` and overwrites `model/model.pt`.
+- `p` — runs a prediction for the hardcoded target date and prints the estimated price.
+- anything else — exits.
 
-## ⚠️ Disclaimer
+## Disclaimer
 
-**Financial Disclaimer:** This project is purely for educational, portfolio, and research purposes. It is **not** financial advice, nor is it a reliable tool for live market trading. Stock markets are highly volatile, chaotic systems influenced by infinite macroeconomic variables, human sentiment, and unpredictable events that a basic sequential network cannot anticipate. 
-
-The historical performance and metrics generated by this LSTM model do not guarantee future results. **Do not use this repository, its code, or its predictions to make real-world financial investments or trades.** Any financial losses incurred from using this software are entirely the responsibility of the user. Trade at your own risk.
+This is a portfolio/learning project, not investment advice. A small LSTM over three engineered features isn't a serious market predictor — stock prices are driven by far more than the last 50 days of volatility, returns, and volume. Don't trade real money based on this.

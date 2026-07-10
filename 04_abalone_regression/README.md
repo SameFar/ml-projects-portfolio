@@ -1,36 +1,51 @@
-# Abalone Physical Measurement Age Predictor
+# Abalone Age Regression
 
-### 🎯 The Quirk & Learning Objective
-Predicting the age of an abalone traditionally requires a tedious physical process: cutting open the shell, staining it, and counting the rings under a microscope. 
+Predicts an abalone's age from physical measurements instead of the usual
+method — cutting the shell, staining it, and counting rings under a
+microscope. Age is just rings + 1.5, so this is a regression problem over
+the [Kaggle abalone dataset](https://www.kaggle.com/datasets/rodolfomendes/abalone-dataset).
 
-The core objective of this project was to determine whether **non-invasive physical dimensions** (weights, lengths, ratios) can accurately predict age using regression models. 
+## How it works
 
-**Key engineering patterns implemented:**
-* **Target Variance Reduction:** The target feature (`Age`) exhibits a noticeable right skew. Applied a log transformation ($y = \log(1 + x)$) to regularize variances and transformed back post-prediction via exponential evaluation.
-* **Leakage Prevention Outlier Isolation:** Applied an unsupervised `IsolationForest` model to clean up anomalies, ensuring fitting was isolated **strictly to the training subset** to avoid target data leakage.
-* **Dummy Variable Trap Mitigation:** Dropped the reference intercept category (`Sex_I`) during categorical one-hot encoding to preserve structural matrix independence.
+1. **Load the data** - `data/abalone.data` is loaded and deduplicated.
+   `Age = Rings + 1.5` becomes the target, and rows with zero or negative
+   `Height` (biologically impossible) are dropped.
+2. **Feature engineering**
+   - `Sex` is one-hot encoded, dropping `Sex_I` to avoid collinearity.
+   - `Volume` = Length x Diameter x Height
+   - `Density` = Whole weight / Volume
+   - `Meat_ratio` = Shucked weight / Whole weight
+   - `Shell_ratio` = Shell weight / Whole weight
+   - Any row that ends up with an inf or NaN from those ratios is dropped.
+3. **Target transform** - `Age` is log-transformed (`log1p`) before training
+   and converted back with `expm1` when scoring.
+4. **Split & clean** - A 75/25 train/test split, then an `IsolationForest`
+   (contamination=0.02) removes outliers from the training set only, so
+   nothing about the test set leaks into that step.
+5. **Models** - Three regressors are trained and compared: `XGBRegressor`,
+   `RandomForestRegressor`, and an `SVR` (wrapped in its own pipeline with a
+   `StandardScaler`, since SVR is sensitive to feature scale).
 
-### 🛠️ Feature Engineering Strategy
-I built out domain-informed, complex interactive features from standard baseline inputs:
-* **Approximated Volume:** `Length` × `Diameter` × `Height`
-* **Bulk Density Metric:** `Whole weight` / `Volume`
-* **Edible Yield Ratios:** `Shucked weight` / `Whole weight` and `Shell weight` / `Whole weight`
+## Results
 
-### 📊 Benchmark Matrix Results
-After performing standard hyperparameter configuration tuning via `RandomizedSearchCV`, the multi-family model run logged the following scores:
+From `results/results.txt` (MAE and MSE are in years, after transforming
+back out of log space):
 
-| Model Paradigm | R² Score | Mean Absolute Error (MAE) | Mean Squared Error (MSE) |
-| :--- | :--- | :--- | :--- |
-| **XGBoost Regressor** | **0.590** | **1.46 years** | **4.52** |
-| **Random Forest Regressor** | 0.588 | 1.46 years | 4.55 |
-| **Support Vector Regressor (RBF)** | 0.587 | 1.46 years | 4.56 |
+| Model | R2 | MAE | MSE |
+| --- | --- | --- | --- |
+| XGBoost Regressor | 0.586 | 1.47 | 4.57 |
+| Random Forest Regressor | 0.588 | 1.46 | 4.55 |
+| Support Vector Regressor | 0.587 | 1.46 | 4.56 |
 
-### 💡 Engineering Conclusions
-* **Algorithmic Convergence:** Despite fundamentally different mathematical execution styles, all three model families capped out near an identical score threshold (**~1.46 years MAE**). This implies the predictive ceiling is constrained by structural limits within physical attribute correlations rather than variance limitations inside specific model structures.
-* **Scaling Requirements:** The custom feature scaling pipeline was explicitly engineered inside an isolated `Pipeline` module for the Support Vector Machine framework, safeguarding performance against variance in unscaled engineered volumetric factors.
+All three land in the same range — around 1.46-1.47 years of average error —
+which suggests the ceiling here is set by how much these physical
+measurements alone can tell you about age, not by which model you pick.
 
-### 🚀 Running the Production Pipeline
-Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder. To run the automated workflow from data collection to metric file parsing:
+## Getting started
+
 ```bash
 uv sync
 uv run src/main.py
+```
+
+This prints the evaluation report and writes it to `results/results.txt`.

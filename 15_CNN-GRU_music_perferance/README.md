@@ -30,6 +30,7 @@ After that, you can give it a link to any YouTube video and it will tell you
 
 ```
 main.py                  # simple menu to run everything
+app.py                    # Streamlit UI version of the same three actions
 src/
   data_scraping.py        # downloads audio from YouTube
   audio_preprocessing.py  # loads and cleans up audio files
@@ -72,6 +73,13 @@ You'll see a menu:
 
 The comment in the menu says it best: for first-time use, run option 2, then
 option 3, before trying option 1.
+
+There's also a Streamlit version of the same three actions (predict, scrape
+playlist, train) if you'd rather click through a UI:
+
+```bash
+uv run streamlit run app.py
+```
 
 ## Notes
 

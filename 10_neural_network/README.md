@@ -1,104 +1,39 @@
-# Multi-Head Fashion Recommendation Neural Network
+# Fashion Recommendation Neural Network
 
-This folder contains a neural network designed to predict multiple fashion recommendations simultaneously (such as recommended colors, materials, patterns, and metals).
+Give it someone's hair colour, eye colour, skin tone, undertone, and torso length, and it predicts a set of fashion recommendations for them — clothing colors to wear and avoid, materials, patterns, jewelry metal, and color-wheel region. It's a multi-head neural network: one shared hidden layer feeding into six separate output heads, one per recommendation category.
 
-It features two separate implementations: a custom version built entirely from scratch using raw **NumPy**, and a modernized version built using **PyTorch**.
+This folder has two parallel implementations of the same model: one written from scratch in NumPy, and one in PyTorch. I built both to have a from-scratch version alongside a version I could actually deploy without dragging PyTorch into a serverless function.
 
----
+## How it works
 
-## 🧠 Why Both? (Portfolio Reasoning)
+The input is one-hot encoded from five categorical features. It goes through a single shared hidden layer with a ReLU activation (He/Kaiming-initialized), which then branches into six output heads (Xavier/Glorot-initialized), each ending in a softmax and trained with categorical cross-entropy, since every head is a pick-one-of-N choice.
 
-This project contains two separate code tracks to demonstrate a deep understanding of machine learning from first principles up to production deployment:
+- `src/neural_network.py` has both versions of the model: a `NeuralNetwork` class with hand-written forward/backward passes and manual gradient descent, and a `MultiHeadNeuralNetwork` PyTorch `nn.Module` with the same architecture built on `autograd`.
+- `src/train.py` trains the NumPy model for 3000 epochs and saves the weights to both `src/model/fashion_nn_weights.pkl` and `api/model/fashion_nn_weights.pkl`.
+- `src/torch_train.py` trains the PyTorch model for 2000 epochs with SGD, and saves it to `src/model/torch_model.pth`.
+- Both training loops use the same manually-decayed learning rate schedule (starts at 0.05, decays by 0.00001 per step down to a floor of 0.001).
+- `data/recommendations.csv` is the training data ([Kaggle: fashion-and-color-recommendation-dataset](https://www.kaggle.com/datasets/suryaprabha19/fashion-and-color-recommendation-dataset)), loaded and one-hot encoded in `src/data_preprocessing.py`.
+- `data_visualisation.ipynb` has the exploratory data analysis.
 
-* **The NumPy Implementation:** Demonstrates a fundamental understanding of underlying ML mathematics. It showcases the ability to manually write forward propagation, execute the chain rule via backward propagation across a multi-head network, track individual losses, and implement manual gradient descent without framework abstractions.
-* **The PyTorch Implementation:** Demonstrates modern, industry-standard engineering. It transitions the manual math into optimized framework code using dynamic computational graphs (`autograd`), native optimizers, and automated weight initializations.
+There are two ways to serve predictions, both behind the same `POST /predict` endpoint and `FashionInput` pydantic schema:
 
----
+- `api/app.py` — loads the NumPy model from `api/model/fashion_nn_weights.pkl`. This is the one deployed to Vercel as a serverless function (`api/vercel.json` routes all traffic to it); `api/requirements.txt` exists solely because Vercel's Python builder reads it directly and doesn't know about uv.
+- `src/app.py` — loads the PyTorch model from `src/model/torch_model.pth`, for running the same thing locally on port 8001.
 
-## 📂 Project Structure
-
-### 🌐 NumPy Production API (`/api`)
-
-* `neural_network.py` — From-scratch NumPy model architecture.
-* `app.py` — Vercel-ready FastAPI application for production inference.
-* `model/fashion_nn_weights.pkl` — Saved weights loaded by the production API.
-* `conversion.py` / `data_preprocessing.py` / `pydantic_model.py` — Production helper scripts for processing incoming features and mapping outputs.
-
-### 🧪 PyTorch Development (`/src`)
-
-* `neural_network.py` — Modernized PyTorch implementation.
-* `torch_train.py` — Central training script that optimizes the PyTorch model and saves weight configurations for both tracks.
-* `torch_app.py` — Local FastAPI application for testing the PyTorch backend.
-* `model/torch_model.pth` — Saved PyTorch weights.
-* `data_visualization.ipynb` — Jupyter Notebook for EDA and data processing.
-* `conversion.py` / `data_preprocessing.py` / `pydantic_model.py` — Duplicate helper scripts for local development stability.
-
----
-
-## 🚀 How It Works
-
-1. **Shared Hidden Layer:** The network uses a shared hidden layer with a ReLU activation function to learn base features from the inputs.
-2. **Multi-Head Outputs:** The hidden layer branches out into 6 separate output "heads" targeting specific categorical recommendations.
-3. **Weight Initialization:** Uses He/Kaiming initialization for the ReLU hidden layer and Xavier/Glorot initialization for the output heads to keep variance stable.
-4. **Loss Functions:** Uses Categorical Cross-Entropy for multi-class heads and Binary Cross-Entropy for independent classification heads.
-
----
-
-## 🛠️ How to Run Locally
-
-### 1. Installation
-
-Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder:
+## Getting started
 
 ```bash
 uv sync
 
-```
+# train the from-scratch NumPy model
+uv run src/train.py
 
-> Note: `api/requirements.txt` is kept separately since Vercel's deployment builder reads it directly and does not use uv.
-
-### 2. Training the Network
-
-The central PyTorch training script handles the optimization loop for 2000 epochs, tracks individual head losses, handles learning rate decay, and saves weights to both the development path (`src/model/`) and the production path (`api/model/`):
-
-```bash
+# train the PyTorch model
 uv run src/torch_train.py
 
+# run the PyTorch inference API locally
+uv run src/app.py
+
+# run the NumPy inference API locally (the one Vercel deploys)
+cd api && uv run uvicorn app:app --reload --port 8000
 ```
-
-### 3. Running the Local API Servers
-
-You can spin up either backend to test predictions:
-
-```bash
-# Run the NumPy Production Server (Port 8000)
-uv run api/app.py
-uv run uvicorn api.app:app --host 127.0.0.1 --port 8000 --reload
-
-# Run the PyTorch Development Server (Port 8001)
-uv run src/torch_app.py
-
-```
-
----
-
-## 🌐 Production Deployment (Vercel Serverless)
-
-To keep cloud deployments hyper-fast, lightweight, and completely free of cold-start performance penalties, **the NumPy track is deployed to Vercel Serverless**. This completely bypasses the massive file-size restrictions imposed by framework heavyweights like PyTorch.
-
-By setting the Vercel **Root Directory** setting directly to this `nn/` folder, the configuration routes all incoming cloud traffic straight to the optimized NumPy inference engine inside `api/app.py`.
-
-### Testing Live Predictions
-
-Send a POST request to your live Vercel endpoint suffix: `/predict` using the structured JSON data defined in your `FashionInput` schema to receive mapped text recommendations instantly.
-
----
-
-## 💡 Engineering Reflection & Takeaways
-
-In hindsight, given the structured and deterministic nature of the current dataset, a simple rule-based search function or a database lookup table could achieve the same results with zero training time and 100% accuracy.
-
-However, this architecture was intentionally engineered as a neural network to achieve two primary goals:
-
-1. **Architectural Complexity:** To demonstrate mastery over multi-task learning networks, custom backpropagation mechanics across separate output heads, and production-grade framework migrations.
-2. **Future Generalization:** A database search function breaks the moment user input is noisy, incomplete, or fuzzy. This neural network provides a flexible backbone capable of scaling to non-linear real-world data (such as raw RGB values, missing profile fields, or continuous user metrics) where hardcoded `if/else` logic falls apart.

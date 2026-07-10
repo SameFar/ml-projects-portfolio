@@ -1,95 +1,28 @@
-# PSO Hyperparameter Optimizer for GMM
+# PSO Hyperparameter Tuning for a Gaussian Mixture Model
 
-A custom, from-scratch implementation of a **Particle Swarm Optimization (PSO)** algorithm built to tune hyperparameters for a Gaussian Mixture Model (GMM).
+A particle swarm optimizer, written from scratch with NumPy, that searches for good hyperparameters for a Gaussian Mixture Model instead of running a grid search over them.
 
-## Overview
+## How it works
 
-This project implements a continuous metaheuristic optimization algorithm to find the ideal configuration for an unsupervised GMM pipeline. Instead of relying on slow brute-force grid searches, a swarm of 50 particles navigates a multi-dimensional search space to minimize the Bayesian Information Criterion (BIC) score.
+A GMM has a few hyperparameters that interact in non-obvious ways: `n_components` (how many clusters), `covariance_type` (`full`, `tied`, `diag`, or `spherical`), and `tol` (convergence tolerance). Grid search treats these independently and gets expensive fast; PSO instead treats them as coordinates in a 3D continuous space and lets a swarm of particles fly around that space looking for the combination that minimizes BIC (Bayesian Information Criterion) on the dataset.
 
-The optimization pipeline handles three mixed-type hyperparameters:
+Each particle (`src/Particle.py`) is a position vector `[n_components, covariance_type_index, tol]` plus a velocity vector. Since `covariance_type` is categorical, it's treated as an index (0-3) into `["full", "tied", "diag", "spherical"]` and rounded to the nearest integer before each fitness evaluation. Fitness is just "fit a `GaussianMixture` with these (rounded/clamped) parameters and return its BIC score" — lower is better. If a particle lands on a configuration that makes the GMM fail to fit, its fitness is set to infinity so the swarm steers away from it.
 
-* **`n_components`** (Discrete integer): Number of clusters to find ($2$ to $20$).
-* **`covariance_type`** (Categorical mapped to continuous space): The geometric shape of the clusters (`full`, `tied`, `diag`, `spherical`).
-* **`tol`** (Continuous float): Convergence tolerance threshold ($0.0001$ to $0.1$).
+`src/main.py` runs the swarm: 50 particles for 50 iterations. Each iteration, every particle's velocity gets updated by a weighted mix of its own momentum, the pull toward its personal-best position, and the pull toward the swarm's global-best position — the standard PSO velocity update. The inertia weight decays linearly from 0.9 to 0.4 over the run, so the swarm explores broadly early on and settles down to fine-tune later. Velocity is clamped to 20% of each parameter's range so particles can't overshoot the search space in one step.
 
----
+The dataset it's tuning against (`src/data.csv`) is the same engineered customer-summary table from [`07_customer_types`](../07_customer_types) — seven numeric features per customer (transaction count, total spent, return rate, etc.).
 
-## Algorithm Architecture
+## Results
 
-The optimization engine uses a system of physical kinematics applied to data science hyperparameter spaces. Particles adjust their movement based on momentum, personal history, and the collective wisdom of the swarm.
+Running `uv run src/main.py` (50 particles, 50 iterations) against `src/data.csv`:
 
-### Mathematical Parameters
+PLACEHOLDER_RESULTS
 
-* **Decaying Inertia ($w$):** Dynamically scales from $0.9$ down to $0.4$ across iterations to transition the swarm from wide-area exploration to tight-area exploitation.
-* **Acceleration Coefficients ($c_1, c_2$):** Set to $1.8$ to evenly balance a particle's pull between its own personal best position (`pBest`) and the global swarm's best position (`GsBest`).
-* **Velocity Clamping (`V_MAX`):** Restricts maximum steps to 20% of the parameter ranges to prevent particles from flying outside the boundaries.
+## Getting started
 
-```python
-# The Core Kinematic Velocity Update Vector
-v1 = (w * particle.V) + (c1 * r1 * (particle.pBest - particle.X)) + (c2 * r2 * (GpBest - particle.X))
-
-```
-
----
-
-## Search Space Mapping
-
-Because PSO operates naturally in a continuous floating-point space, the algorithm clips and transforms vectors into strict parameter boundaries before running fitness evaluations:
-
-```python
-n_comp = int(np.clip(round(self.X[0]), L_BOUND[0], U_BOUND[0]))
-cov_idx = int(np.clip(round(self.X[1]), L_BOUND[1], U_BOUND[1]))
-tol = round(float(np.clip(self.X[2], L_BOUND[2], U_BOUND[2])), 5)
-
-```
-
-If a particle lands on an unstable configuration that causes a mathematical exception during GMM fitting, the pipeline catches the error and assigns a fitness score of `float('inf')`, cleanly forcing the swarm away from invalid search regions.
-
----
-
-## Usage
-
-Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder:
 ```bash
 uv sync
-```
-
-### Run Optimizer
-
-Make sure your target customer dataset is exported as a `data.csv` file in the src folder, then run the main entry point:
-
-```bash
 uv run src/main.py
-
 ```
 
-### Outputs
-
-The script updates live convergence progress in the terminal window and displays the winning GMM parameters at completion:
-
-```text
-Initial Swarm Best BIC: 245120.44
-
-1/50, Best BIC score: 231104.12
-2/50, Best BIC score: 228945.87
-...
-50/50, Best BIC score: 214052.31
-
-Best parameters for Gaussian Mixture
-            n_components = 14,
-            covariance_type = full,
-            tol = 0.00450
-
-```
-
----
-
-## Tech Stack
-
-* Python
-* NumPy (Vectorized kinematic calculations)
-* Pandas
-* Scikit-learn (GaussianMixture evaluation)
-* Pathlib
-
----
+`src/main.py` expects a `data.csv` in the `src/` folder — it's included here, but you can point it at any numeric feature table you want to tune a GMM for. It prints the swarm's best BIC score after each iteration and prints the winning `n_components`, `covariance_type`, and `tol` at the end.

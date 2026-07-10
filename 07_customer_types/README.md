@@ -1,100 +1,48 @@
-# E-Commerce Customer Segmentation
+# Customer Types — E-Commerce Segmentation
 
-A machine learning pipeline that groups e-commerce customers into different segments based on their buying habits. The project uses a Gaussian Mixture Model (GMM) to group customers and a FastAPI server to handle real-time predictions.
+Groups e-commerce customers into behavioral segments from raw transaction data, using a Gaussian Mixture Model. Comes with a FastAPI endpoint that takes a customer's yearly stats and returns which segment they fall into.
 
-## Overview
+## How it works
 
-This project takes raw sales data and turns it into useful profiles by grouping customer behaviors.
+The source data is the [UCI Online Retail II](https://archive.ics.uci.edu/dataset/352/online+retail) dataset — one row per line item on an invoice. `src/data_preprocessing.py` groups everything by `Customer ID` so each row becomes one customer, and engineers seven features per customer:
 
-The pipeline includes:
+- **Transactions** — how many line items they've bought
+- **Total Quantity** — total units purchased
+- **Total Spent** — price times quantity, summed
+- **Total Refund Received** — money back from returns (quantities under 0 are treated as refunds)
+- **Avg Spent** — total spent divided by transaction count
+- **Purchases per month** — transactions divided by 12 (the dataset spans roughly a year)
+- **Return Rate** — transaction count relative to refund count
 
-* Data cleaning and dropping missing values
-* Feature engineering to group transactions by unique customers
-* Handling refunds and returns mathematically
-* Scaling features to handle big spenders safely
-* Clustering customers using a Gaussian Mixture Model (GMM)
-* FastAPI deployment to predict a customer's segment locally
+Features are scaled with `RobustScaler` before clustering, since a handful of very high spenders would otherwise dominate a standard scaler.
 
----
+The exploration notebook (`Retail Customer Clustering.ipynb`) tried KMeans, HDBSCAN, and a Gaussian Mixture Model side by side, plotting each in 3D. GMM gave the cleanest separation, so that's what `src/train.py` actually fits — 6 components, saved to `model/model.pkl`.
 
-## Dataset & Feature Engineering
+The FastAPI app (`src/app.py`) maps each of the 6 cluster indices to a human-readable label based on manual inspection of the cluster means:
 
-The raw data comes from a retail sales spreadsheet. The pipeline cleans the data and groups it by `Customer ID` so that each row represents one customer instead of a single receipt line.
+| Cluster | Label |
+| --- | --- |
+| 0 | No Refunds |
+| 1 | Significant Refund rate |
+| 2 | Frequent Buyers |
+| 3 | Anomaly |
+| 4 | Big Spenders - Infrequent |
+| 5 | Anomaly |
 
-Calculated features per customer:
+Two of the six clusters (3 and 5) came out looking like outlier groups rather than distinct behavioral types, so both just get labeled "Anomaly."
 
-* **Transactions:** Total number of times they bought something
-* **Total Quantity:** Total number of items purchased
-* **Total Spent:** Total money spent (Price $\times$ Quantity)
-* **Total Refund Received:** Total money refunded from returned items
-* **Avg Spent:** Average money spent per transaction
-* **Purchases per month:** Average transactions made per month
-* **Return Rate:** How often they return items compared to buying
+`src/pydantic_model.py` defines the API's request schema — it only asks the caller for the raw counts (transactions, quantity, spent, refunds, returns) and computes `Avg_Spent`, `Transactions_per_month`, and `Return_Rate` itself as Pydantic computed fields, so the caller doesn't have to derive them.
 
----
+## Results
 
-## Model
+This is unsupervised clustering, so there's no accuracy/F1 to report — the notebook's justification for picking GMM over KMeans/HDBSCAN is qualitative (visual cluster separation in the 3D scatter plots), not a benchmarked metric.
 
-A **Gaussian Mixture Model (GMM)** with 6 clusters was chosen because it handles overlapping customer profiles better than standard K-Means. Features are scaled using `RobustScaler` to make sure extreme shoppers don't break the model.
+## Getting started
 
-### Customer Segments Created:
-
-* `0`: Standard Buyers (No Refunds)
-* `1`: High-Volume Accounts (High Refund Rate)
-* `2`: Frequent / Loyal Buyers
-* `3`: Outlier Group A
-* `4`: Big Spenders (Buy Infrequently)
-* `5`: Outlier Group B
-
----
-
-## FastAPI Deployment
-
-A local FastAPI server handles real-time predictions.
-
-It uses Pydantic to validate input data and automatically calculates missing fields (like average spent and monthly purchase rates) on the fly before running the model.
-
----
-
-## Usage
-
-Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder:
 ```bash
 uv sync
+cd src && uv run train.py  # fits the GMM on data/online_retail_II.xlsx, saves model/model.pkl
+cd src && uv run app.py    # starts the FastAPI server at http://127.0.0.1:8000
 ```
 
-### Train the Model
-
-```bash
-cd src && uv run train.py
-
-```
-
-### Run FastAPI Server
-
-```bash
-cd src && uv run app.py
-
-```
-
----
-
-## Current Status
-
-* Customer data grouping logic complete
-* GMM model trained and saved as `model.pkl`
-* FastAPI server working locally with auto-calculated fields
-* Cluster visual plots pending integration into the app
-
----
-
-## Tech Stack
-
-* Python
-* Pandas
-* Scikit-learn
-* FastAPI
-* Pydantic
-* Uvicorn
-
----
+`POST /predict` takes `Transactions`, `Quantity`, `Spent`, `Refunds`, and `Returns`, and returns the predicted segment label.
