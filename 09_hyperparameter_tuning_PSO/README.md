@@ -49,12 +49,17 @@ If a particle lands on an unstable configuration that causes a mathematical exce
 
 ## Usage
 
+Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder:
+```bash
+uv sync
+```
+
 ### Run Optimizer
 
 Make sure your target customer dataset is exported as a `data.csv` file in the src folder, then run the main entry point:
 
 ```bash
-python main.py
+uv run src/main.py
 
 ```
 

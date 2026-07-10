@@ -1,0 +1,18 @@
+[project]
+name = "14-stock-prediction-lstm"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=2.5.1",
+    "pandas>=3.0.3",
+    "torch>=2.13.0",
+    "yfinance>=1.5.1",
+]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true

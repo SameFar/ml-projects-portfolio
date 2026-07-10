@@ -9,9 +9,10 @@ import math
 import pygame
 
 
-
 def main():
-    SAVE_DIR = Path(__file__).resolve().parent.parent/"saved_model"/"elite_mario_dna.npy"
+    SAVE_DIR = (
+        Path(__file__).resolve().parent.parent / "saved_model" / "elite_mario_dna.npy"
+    )
     create_map()
     agents = [Player() for _ in range(config.POPULATION)]
 
@@ -20,7 +21,7 @@ def main():
     stagnant_gen = 0
     run = True
     headless = False
-    
+
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -39,21 +40,23 @@ def main():
                 if event.key == pygame.K_l:
                     try:
                         loaded_dna = np.load(SAVE_DIR)
-                        
+
                         # Rebuild a fresh list of Player objects using the loaded DNA
                         agents = [Player(dna=dna) for dna in loaded_dna]
-                        
+
                         # Reset your simulation tracking metrics
                         i = 0
-                        generation += 1 
-                        print("Successfully loaded saved population to current generation")
-                        
+                        generation += 1
+                        print(
+                            "Successfully loaded saved population to current generation"
+                        )
+
                     except FileNotFoundError:
                         print("404 file found. Press 'S' to save one first.")
 
         # Generation ends if the timer expires or everyone dies
         all_dead = all(not agent.alive for agent in agents)
-        
+
         if i >= config.GENES or all_dead:
             # Get all metrics for fitness evaluation
             for agent in agents:
@@ -61,15 +64,17 @@ def main():
 
                 for goal in goals:
                     if (goal.x, goal.y) not in agent.checks:
-                        distance_from_next_goal = math.sqrt((dx - goal.x)**2 + (dy - goal.y)**2)
+                        distance_from_next_goal = math.sqrt(
+                            (dx - goal.x) ** 2 + (dy - goal.y) ** 2
+                        )
                         break
                 agent.distance = max(1, distance_from_next_goal)
-                
+
                 if len(agent.checks) == len(goals):
                     agent.bonus = 2000
-            
+
             max_fitness = max([a.fitness() for a in agents])
-            
+
             # Change mutation
             if int(config.PREV_FITNESS) >= int(max_fitness):
                 stagnant_gen += 1
@@ -91,17 +96,17 @@ def main():
             elites = natural_selection(agents)
             if not run:
                 MARIO = elites[:0]
-                with open('results.txt', 'w') as f:
-                    f.write(f'''DNA: {MARIO.dna}
-                    fitness: {MARIO.fitness()}''')
+                with open("results.txt", "w") as f:
+                    f.write(f"""DNA: {MARIO.dna}
+                    fitness: {MARIO.fitness()}""")
                     break
             agents = mariojrs(elites)
-            
+
             generation += 1
-            i = 0 # Reset frame tick
+            i = 0  # Reset frame tick
             config.PREV_FITNESS = max_fitness
             continue
-        
+
         # Main (alive) loop
         for agent in agents:
             if not agent.alive:
@@ -118,7 +123,7 @@ def main():
             target_goal = goals[current_goal_idx]
 
             prev_dist_to_goal = abs(agent.x - target_goal.x)
-            
+
             # Movement
             keys = agent.dna
             agent.speed = 0
@@ -129,22 +134,25 @@ def main():
                 agent.jumping = True
             if keys[i][1] and not keys[i][2]:  # Left
                 agent.speed = -config.WALK_SPEED
-            
+
             move(agent)
 
             dist_to_goal = abs(agent.x - target_goal.x)
 
-            if abs(agent.x - agent.previous_x) < 40 or (prev_dist_to_goal - dist_to_goal) < 3:
+            if (
+                abs(agent.x - agent.previous_x) < 40
+                or (prev_dist_to_goal - dist_to_goal) < 3
+            ):
                 agent.stagnant_count += 1
             else:
                 agent.previous_x = agent.x
                 agent.stagnant_count = 0
-        
 
         draw(headless, agents)
         pygame.display.update()
-        clock.tick(60)  
+        clock.tick(60)
         i += 1  # Increments once per parallel step
+
 
 if __name__ == "__main__":
     main()

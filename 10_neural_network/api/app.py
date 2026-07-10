@@ -8,15 +8,17 @@ app = FastAPI()
 
 model = load_model()
 
-@app.get('/')
-async def home():
-    return {'health_check' : 'running'}
 
-@app.post('/predict')
-async def predict(values : FashionInput):
+@app.get("/")
+async def home():
+    return {"health_check": "running"}
+
+
+@app.post("/predict")
+async def predict(values: FashionInput):
     input_array = convert(values)
     model_input = input_array.reshape(1, -1)
-    
+
     pred = model.forward(model_input)
     outs = y_convert(pred)
     return JSONResponse(outs)

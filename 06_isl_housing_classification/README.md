@@ -61,16 +61,21 @@ Users can input housing features and receive predicted price categories through 
 
 ## Usage
 
+Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder:
+```bash
+uv sync
+```
+
 ### Train the Model
 
 ```bash
-python main.py
+uv run src/main.py
 ```
 
 ### Run FastAPI Server
 
 ```bash
-python app.py
+cd src && uv run app.py
 ```
 
 ---

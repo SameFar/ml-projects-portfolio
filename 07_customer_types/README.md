@@ -58,17 +58,22 @@ It uses Pydantic to validate input data and automatically calculates missing fie
 
 ## Usage
 
+Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder:
+```bash
+uv sync
+```
+
 ### Train the Model
 
 ```bash
-python train.py
+cd src && uv run train.py
 
 ```
 
 ### Run FastAPI Server
 
 ```bash
-python app.py
+cd src && uv run app.py
 
 ```
 

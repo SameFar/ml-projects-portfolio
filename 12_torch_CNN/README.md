@@ -47,7 +47,7 @@ Input (3, 150, 150) ──> [ Conv2D + Pool 1 ] ──> (16, 75, 75)
 │   ├── engine.py               # Optimized train_model and test_model runtime loops
 │   └── utils.py                # State-dict serialization saving, loading, and logging drivers
 ├── main.py                     # Main interactive orchestration engine script
-├── requirements.txt            # Project environment framework dependencies
+├── pyproject.toml              # uv-managed project dependencies
 └── README.md                   # Project documentation
 
 ```
@@ -56,10 +56,16 @@ Input (3, 150, 150) ──> [ Conv2D + Pool 1 ] ──> (16, 75, 75)
 
 ### Running the Pipeline
 
+Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder:
+
+```bash
+uv sync
+```
+
 Orchestrate the modular engine using the main entry-point:
 
 ```bash
-python main.py
+uv run main.py
 
 ```
 

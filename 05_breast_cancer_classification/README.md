@@ -27,14 +27,21 @@ Inside results folder
 
 ## 🚀 Deployment & Execution Guide
 
+Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder:
+```bash
+uv sync
+```
+
 ### 1. Training Pipeline
 To execute the end-to-end training pipeline, optimize hyperparameters, and serialize the binary weights (`.pkl`/`.onnx` format):
 
-Bash
-python src/train.py
+```bash
+uv run src/main.py
+```
 
 ### 2. Production Inference & Prediction
-Before executing the prediction file, you must edit data.csv and populate it with real, unstructured patient values matching the 25 required features (e.g., radius_mean, texture_worst, etc.) for the engine to evaluate.
+Before executing the prediction file, you must edit `data/sample.csv` and populate it with real, unstructured patient values matching the 25 required features (e.g., radius_mean, texture_worst, etc.) for the engine to evaluate.
 
-Bash
-python src/predict.py --input data.csv
+```bash
+uv run src/predict.py
+```

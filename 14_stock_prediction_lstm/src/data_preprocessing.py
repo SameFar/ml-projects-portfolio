@@ -3,9 +3,10 @@ from pathlib import Path
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
-file_path = Path(__file__).resolve().parent.parent / 'nvidea_stocks.csv'
+file_path = Path(__file__).resolve().parent.parent / "nvidea_stocks.csv"
 
-data = np.genfromtxt(file_path, delimiter=',',dtype=float)
+data = np.genfromtxt(file_path, delimiter=",", dtype=float)
+
 
 def train_test_split(data=data, train_size=0.7, timestep=50):
     split_line = int(len(data) * train_size)
@@ -13,8 +14,9 @@ def train_test_split(data=data, train_size=0.7, timestep=50):
 
     start_test_idx = max(0, split_line - timestep)
     test_data = data[start_test_idx:]
-    
+
     return train_data, test_data
+
 
 def make_loader(data, timestep=50):
     X, y = [], []
@@ -30,5 +32,6 @@ def make_loader(data, timestep=50):
     ds = TensorDataset(Xt, yt)
     return DataLoader(ds, batch_size=32, shuffle=False)
 
-def reverse_scale_pred(pred, min_val, max_val): 
+
+def reverse_scale_pred(pred, min_val, max_val):
     return (pred * (max_val - min_val)) + min_val

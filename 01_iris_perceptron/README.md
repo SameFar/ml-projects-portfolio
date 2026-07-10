@@ -24,7 +24,7 @@ This specific project allowed me to analyze:
 * **Decision Boundary Quality:** Despite the lack of perfect linear convergence, the simple architecture yields strong performance, stabilizing around **~99.7%** accuracy (check `results/results.txt` for exact run metrics).
 
 ## 🚀 How to Execute
-To clean the data, train the model, log accuracy profiles, and output decision figures:
+Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder. To clean the data, train the model, log accuracy profiles, and output decision figures:
 ```bash
-cd src
-python main.py
+uv sync
+uv run src/main.py

@@ -6,6 +6,7 @@ from sklearn.metrics import confusion_matrix, precision_score, recall_score
 from data_loader import load_and_engineer_data
 from model import get_baseline_pipeline
 
+
 def main():
     # Structural relative file tracks
     BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,7 +21,7 @@ def main():
     print("Fitting Baseline XGBoost Classifier Pipeline...")
     pipe = get_baseline_pipeline()
     pipe.fit(X_train, y_train)
-    
+
     # 3. Predict | metrics output
     preds = pipe.predict(X_test)
     cm = confusion_matrix(y_test, preds)
@@ -43,17 +44,23 @@ def main():
 
     # 5. Visual Matrix Export
     plt.figure(figsize=(6, 5))
-    sns.heatmap(cm, annot=True, fmt="d", cmap="Reds", 
-                xticklabels=["Not Fraud", "Fraud"], 
-                yticklabels=["Not Fraud", "Fraud"])
+    sns.heatmap(
+        cm,
+        annot=True,
+        fmt="d",
+        cmap="Reds",
+        xticklabels=["Not Fraud", "Fraud"],
+        yticklabels=["Not Fraud", "Fraud"],
+    )
     plt.ylabel("Actual State")
     plt.xlabel("Predicted State")
     plt.title("Fraud Evaluation Confusion Matrix")
     plt.tight_layout()
-    
+
     plt.savefig(RESULTS_DIR / "confusion_matrix.png")
     plt.close()
     print("Confusion Matrix plot exported successfully.")
+
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,6 @@
 import torch.nn as nn
 
+
 class CharRNN(nn.Module):
     def __init__(self, input_size=58, hidden_size=128, output_size=18):
         super(CharRNN, self).__init__()

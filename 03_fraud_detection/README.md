@@ -30,8 +30,9 @@ The baseline model achieves excellent classification control over the unbalanced
 For full parameter settings and a detailed look at the true/false count distributions, refer to `results/results.txt`.
 
 ## 🚀 Execution & Portability
-This repository uses entirely relative path configurations. It will run out of the box on any device without modifying directory locations.
+This repository uses entirely relative path configurations. It will run out of the box on any device without modifying directory locations. Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder.
 
-Install dependencies:
+Install dependencies and run:
 ```bash
-pip install -r requirements.txt
+uv sync
+uv run src/main.py

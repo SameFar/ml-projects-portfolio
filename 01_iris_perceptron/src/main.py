@@ -5,10 +5,11 @@ from data_loader import load_and_preprocess
 from perceptron import Perceptron
 from pathlib import Path
 
+
 def main():
     # dataset from https://www.kaggle.com/datasets/vikrishnan/iris-dataset
-    data_path = Path(__file__).resolve().parent.parent.parent / 'data' / 'iris.csv'
-    results_dir = Path(__file__).resolve().parent.parent / 'results'
+    data_path = Path(__file__).resolve().parent.parent / "data" / "iris.csv"
+    results_dir = Path(__file__).resolve().parent.parent / "results"
     os.makedirs(results_dir, exist_ok=True)
 
     # 1. Prepare data
@@ -26,17 +27,17 @@ def main():
         for i in range(nums):
             error = P.train(X_data[i], y_data[i])
             total_error += abs(error)
-        
+
         if total_error == 0:
             final_epoch = epoch
             converged = True
             break
 
     # 3. Predict & evaluate
-    df['predicted_target'] = [P.activate(x) for x in X_data]
-    df['predicted_species'] = df['predicted_target']
-    
-    accuracy = (df['predicted_species'] == df['virginica']).sum() / nums
+    df["predicted_target"] = [P.activate(x) for x in X_data]
+    df["predicted_species"] = df["predicted_target"]
+
+    accuracy = (df["predicted_species"] == df["virginica"]).sum() / nums
 
     # 4. Output metrics to results.txt
     with open(os.path.join(results_dir, "results.txt"), "w") as f:
@@ -51,17 +52,24 @@ def main():
     # 5. Generate and save the visual comparison plot
     fig, axes = plt.subplots(1, 2, figsize=(14, 6))
 
-    sns.scatterplot(ax=axes[0], x="sepal_length", y="sepal_width", data=df, hue="virginica")
+    sns.scatterplot(
+        ax=axes[0], x="sepal_length", y="sepal_width", data=df, hue="virginica"
+    )
     axes[0].set_title("Ground Truth")
 
-    sns.scatterplot(ax=axes[1], x="sepal_length", y="sepal_width", data=df, hue="predicted_species")
+    sns.scatterplot(
+        ax=axes[1], x="sepal_length", y="sepal_width", data=df, hue="predicted_species"
+    )
     axes[1].set_title("Perceptron Predictions")
 
     plt.tight_layout()
     plt.savefig(os.path.join(results_dir, "prediction_comparison.png"))
     plt.close()
-    
-    print(f"Run completed. Metrics and plots exported to '{results_dir}/'. Accuracy: {accuracy:.4f}")
+
+    print(
+        f"Run completed. Metrics and plots exported to '{results_dir}/'. Accuracy: {accuracy:.4f}"
+    )
+
 
 if __name__ == "__main__":
     main()

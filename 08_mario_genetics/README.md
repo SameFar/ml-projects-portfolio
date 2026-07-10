@@ -60,10 +60,15 @@ Users can save the current elite DNA pool during execution and reload it to imme
 
 ## Usage
 
+Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder:
+```bash
+uv sync
+```
+
 ### Run Simulation / Train Agents
 
 ```bash
-python main.py
+uv run src/main.py
 
 ```
 

@@ -1,5 +1,5 @@
 === California Housing Pipeline Run Results ===
 Train Shape: (13473, 8)
 Test Shape: (3369, 8)
-Testing R2 Score: 0.8469
-Testing RMSE (Log scale): 0.1322
+Testing R2 Score: 0.8452
+Testing RMSE (Log scale): 0.1330

@@ -1,0 +1,14 @@
+XGBoost Regressor:
+  R2  = 0.586
+  MAE = 1.47 years
+  MSE = 4.57
+
+Random Forest Regressor:
+  R2  = 0.588
+  MAE = 1.46 years
+  MSE = 4.55
+
+Support Vector Regressor:
+  R2  = 0.587
+  MAE = 1.46 years
+  MSE = 4.56

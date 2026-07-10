@@ -44,9 +44,9 @@ songs/                    # downloaded training songs go here
 
 ## Setup
 
-1. Create a virtual environment and install the dependencies:
-   ```
-   torch, librosa, numpy, yt-dlp, panns_inference
+1. Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder:
+   ```bash
+   uv sync
    ```
 2. Make sure `ffmpeg` is installed on your system (needed to extract audio).
 3. Download the PANN checkpoint `Cnn14_emb512_mAP=0.420.pth` and place it in
@@ -56,8 +56,8 @@ songs/                    # downloaded training songs go here
 
 Run the program:
 
-```
-python main.py
+```bash
+uv run main.py
 ```
 
 You'll see a menu:

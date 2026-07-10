@@ -26,8 +26,9 @@ Key elements focused on during this iteration:
 * **Terminal Summary:** The completed run achieved an $R^2$ coefficient of **0.XX** (refer to your updated `results/results.txt` for your precise machine output parameters).
 
 ## 🚀 Execution & Portability
-This repository relies exclusively on relative path lookups and contains zero environment-specific dependencies. 
+This repository relies exclusively on relative path lookups and contains zero environment-specific dependencies. Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder.
 
-Install target packages:
+Install dependencies and run:
 ```bash
-pip install -r requirements.txt
+uv sync
+uv run src/main.py

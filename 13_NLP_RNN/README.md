@@ -31,14 +31,18 @@ Built explicitly using **PyTorch**, the model handles sequence data without thir
 
 ### 1. Installation & Data
 
-Ensure you have PyTorch and Matplotlib installed. Place your target `.txt` files inside a `data/names/` directory where each file title is the target label (e.g., `Arabic.txt`, `Italian.txt`).
+Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder:
+```bash
+uv sync
+```
+Target `.txt` files already live inside `data/names/`, one file per label (e.g., `Arabic.txt`, `Italian.txt`).
 
 ### 2. Execution
 
 Run the main script to interface with the CLI wrapper:
 
 ```bash
-python main.py
+uv run main.py
 
 ```
 

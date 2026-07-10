@@ -57,10 +57,11 @@ To run a successful, non-crashing validation check on the model, **you must use 
 
 ### 3. Execution
 
-Launch the core command-line application interface to train or predict:
+Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder. Launch the core command-line application interface to train or predict:
 
 ```bash
-python main.py
+uv sync
+uv run main.py
 
 
 ## ⚠️ Disclaimer

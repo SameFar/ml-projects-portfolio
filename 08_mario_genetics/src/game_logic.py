@@ -1,4 +1,4 @@
-from game_objects import Player, Obsticle, Goal, BG
+from game_objects import Obsticle, Goal, BG
 import pygame
 import config
 
@@ -7,22 +7,30 @@ tiles = []
 goals = []
 # initialisation
 pygame.init()
-window = pygame.display.set_mode((config.WIDTH, config.HEIGHT))  # set game window pixels
+window = pygame.display.set_mode(
+    (config.WIDTH, config.HEIGHT)
+)  # set game window pixels
 clock = pygame.time.Clock()  # to set framerate
 pygame.display.set_caption("Genetically Superior Mario")  # set window title
+
+
 # Map creation
 def create_map():
 
-    
     for row_idx, row in enumerate(config.level):
         for col_idx, char in enumerate(row):
             if char == "X":
-                tiles.append(Obsticle(col_idx * config.TILE_WIDTH, row_idx * config.TILE_HEIGHT))
+                tiles.append(
+                    Obsticle(col_idx * config.TILE_WIDTH, row_idx * config.TILE_HEIGHT)
+                )
             if char == "Y":
-                goals.append(Goal(col_idx * config.TILE_WIDTH, row_idx * config.TILE_HEIGHT))
+                goals.append(
+                    Goal(col_idx * config.TILE_WIDTH, row_idx * config.TILE_HEIGHT)
+                )
 
     # Making checkpoints start from the bottom instead of top
     goals.reverse()
+
 
 # Collision logic
 def check_tile_collision(mario):
@@ -33,6 +41,8 @@ def check_tile_collision(mario):
         if mario.colliderect(g):
             return g
     return None
+
+
 def check_tile_collision_x(mario):
     col = check_tile_collision(mario)
     if col is not None:
@@ -44,9 +54,11 @@ def check_tile_collision_x(mario):
             mario.speed = 0
         else:
             col.reached()
-            if (col.x,col.y) not in mario.checks:
-                mario.checks.add((col.x,col.y))
-                mario.time+=config.CHECK_TIME
+            if (col.x, col.y) not in mario.checks:
+                mario.checks.add((col.x, col.y))
+                mario.time += config.CHECK_TIME
+
+
 def check_tile_collision_y(mario):
     col = check_tile_collision(mario)
     if col is not None:
@@ -59,9 +71,10 @@ def check_tile_collision_y(mario):
             mario.velocity = 0
         else:
             col.reached()
-            if (col.x,col.y) not in mario.checks:
-                mario.checks.add((col.x,col.y))
-                mario.time+=config.CHECK_TIME
+            if (col.x, col.y) not in mario.checks:
+                mario.checks.add((col.x, col.y))
+                mario.time += config.CHECK_TIME
+
 
 def draw(headless, agents):
     window.blit(BG, (0, 0))
@@ -76,6 +89,7 @@ def draw(headless, agents):
             if mario.alive:
                 mario.image_jump()
                 window.blit(mario.image, mario)
+
 
 def move(mario):
     mario.x += mario.speed

@@ -30,7 +30,7 @@ After performing standard hyperparameter configuration tuning via `RandomizedSea
 * **Scaling Requirements:** The custom feature scaling pipeline was explicitly engineered inside an isolated `Pipeline` module for the Support Vector Machine framework, safeguarding performance against variance in unscaled engineered volumetric factors.
 
 ### 🚀 Running the Production Pipeline
-To run the automated workflow from data collection to metric file parsing:
+Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder. To run the automated workflow from data collection to metric file parsing:
 ```bash
-cd /home/sameer/Documents/jupyter/ml-projects-portfolio/02-abalone-age-prediction
-python src/train.py
+uv sync
+uv run src/main.py

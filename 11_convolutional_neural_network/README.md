@@ -45,7 +45,8 @@ Raw Image (1, 28, 28) ──> [ 2D Convolutions ] ──> [ ReLU Activation ]
 │   ├── test.py                 # Evaluation loop & metrics reporting
 │   └── predict.py              # CLI inference utility for single custom images
 ├── added_images/               # Local storage for custom testing images
-├── requirements.txt            # Project environment dependencies
+├── data/MNIST/                 # Local MNIST binary files (see Dataset Installation)
+├── pyproject.toml              # uv-managed project dependencies
 └── README.md                   # Project documentation
 
 ```
@@ -60,10 +61,10 @@ Raw Image (1, 28, 28) ──> [ 2D Convolutions ] ──> [ ReLU Activation ]
 
 ### 2. Environment Setup
 
-Initialize dependencies within an isolated virtual environment:
+Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder:
 
 ```bash
-pip install -r requirements.txt
+uv sync
 
 ```
 
@@ -72,7 +73,7 @@ pip install -r requirements.txt
 Train the network weights from scratch across the training data split:
 
 ```bash
-python src/train.py
+uv run src/train.py
 
 ```
 
@@ -81,7 +82,7 @@ python src/train.py
 Evaluate test dataset accuracy, extract performance statistics, and view error readouts:
 
 ```bash
-python src/test.py
+uv run src/test.py
 
 ```
 
@@ -90,7 +91,7 @@ python src/test.py
 Use the newly added prediction pipeline to run single-image inference on your own custom JPEG images:
 
 ```bash
-python src/predict.py
+uv run src/predict.py
 
 ```
 

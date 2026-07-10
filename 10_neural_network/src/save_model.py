@@ -2,14 +2,17 @@
 import pickle
 from pathlib import Path
 
-model_path = Path(__file__).resolve().parent / 'model' / "fashion_nn_weights.pkl"
-production_path = Path(__file__).resolve().parent.parent / 'api' / 'model' / "fashion_nn_weights.pkl"
+model_path = Path(__file__).resolve().parent / "model" / "fashion_nn_weights.pkl"
+production_path = (
+    Path(__file__).resolve().parent.parent / "api" / "model" / "fashion_nn_weights.pkl"
+)
 
-def save_model(model, filename = model_path, pfilename = production_path, production = True):
+
+def save_model(model, filename=model_path, pfilename=production_path, production=True):
     model_data = {
         "base_weights": model.weights,
         "base_bias": model.bias,
-        "heads": model.heads
+        "heads": model.heads,
     }
     with open(filename, "wb") as f:
         pickle.dump(model_data, f)
@@ -18,5 +21,4 @@ def save_model(model, filename = model_path, pfilename = production_path, produc
         with open(pfilename, "wb") as f:
             pickle.dump(model_data, f)
 
-
-    print(f"\n---Brain successfully frozen---")
+    print("\n---Brain successfully frozen---")

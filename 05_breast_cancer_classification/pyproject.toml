@@ -1,0 +1,9 @@
+[project]
+name = "05-breast-cancer-classification"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "pandas>=3.0.3",
+    "scikit-learn>=1.9.0",
+    "xgboost>=3.3.0",
+]

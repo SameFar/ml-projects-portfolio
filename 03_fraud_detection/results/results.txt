@@ -1,10 +1,10 @@
 === Credit Card Fraud Baseline Evaluation ===
 Evaluated Test Observations: 56746
-Precision Score: 0.9706
-Recall Score: 0.7333
+Precision Score: 0.9701
+Recall Score: 0.7222
 
 Confusion Matrix Array Breakdown:
 True Negatives (Legit caught): 56654
 False Positives (Type I error): 2
-False Negatives (Type II error - Missed Fraud): 24
-True Positives (Fraud caught): 66
+False Negatives (Type II error - Missed Fraud): 25
+True Positives (Fraud caught): 65

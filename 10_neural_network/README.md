@@ -48,19 +48,21 @@ This project contains two separate code tracks to demonstrate a deep understandi
 
 ### 1. Installation
 
-Install dependencies in your local environment:
+Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder:
 
 ```bash
-pip install torch numpy fastapi uvicorn pydantic
+uv sync
 
 ```
+
+> Note: `api/requirements.txt` is kept separately since Vercel's deployment builder reads it directly and does not use uv.
 
 ### 2. Training the Network
 
 The central PyTorch training script handles the optimization loop for 2000 epochs, tracks individual head losses, handles learning rate decay, and saves weights to both the development path (`src/model/`) and the production path (`api/model/`):
 
 ```bash
-python src/torch_train.py
+uv run src/torch_train.py
 
 ```
 
@@ -70,11 +72,11 @@ You can spin up either backend to test predictions:
 
 ```bash
 # Run the NumPy Production Server (Port 8000)
-python api/app.py
-uvicorn api.app:app --host 127.0.0.1 --port 8000 --reload
+uv run api/app.py
+uv run uvicorn api.app:app --host 127.0.0.1 --port 8000 --reload
 
 # Run the PyTorch Development Server (Port 8001)
-python src/torch_app.py
+uv run src/torch_app.py
 
 ```
 
