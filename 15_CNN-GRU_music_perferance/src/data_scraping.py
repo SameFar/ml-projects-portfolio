@@ -1,7 +1,6 @@
 import re
 import logging
 from pathlib import Path
-import shutil
 
 import yt_dlp
 
@@ -11,9 +10,10 @@ def sanitize_filename(name: str) -> str:
     return re.sub(r'[\\/*?:"<>|]', "_", name)
 
 
-def clear_directory(dir_path : Path):
+def clear_directory(dir_path: Path):
     for item in dir_path.iterdir():
-        item.unlink()        # Delete file
+        item.unlink()  # Delete file
+
 
 def audio_scraper(url: str, songs_dir: Path):
     songs_dir.mkdir(parents=True, exist_ok=True)
@@ -50,7 +50,9 @@ def audio_scraper(url: str, songs_dir: Path):
             logging.warning(f"Skipping entry {index + 1}: Missing video ID.")
             continue
 
-        video_url = entry.get("webpage_url") or f"https://www.youtube.com/watch?v={video_id}"
+        video_url = (
+            entry.get("webpage_url") or f"https://www.youtube.com/watch?v={video_id}"
+        )
 
         raw_title = entry.get("title", f"track_{index + 1}")
         video_title = sanitize_filename(raw_title)
@@ -64,9 +66,7 @@ def audio_scraper(url: str, songs_dir: Path):
             )
             continue
 
-        logging.info(
-            f"[{index + 1}/{len(video_entries)}] Processing: {video_title}"
-        )
+        logging.info(f"[{index + 1}/{len(video_entries)}] Processing: {video_title}")
 
         output_template = str(songs_dir / f"{video_title}.%(ext)s")
 
