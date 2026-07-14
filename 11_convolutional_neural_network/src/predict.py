@@ -1,5 +1,5 @@
 import numpy as np
-from save_model import load_model
+from .save_model import load_model
 from PIL import Image
 from pathlib import Path
 

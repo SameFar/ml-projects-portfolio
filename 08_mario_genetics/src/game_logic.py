@@ -1,6 +1,7 @@
-from game_objects import Obsticle, Goal, BG
 import pygame
-import config
+
+from . import config
+from .game_objects import Obsticle, Goal, BG
 
 
 tiles = []

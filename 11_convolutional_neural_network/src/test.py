@@ -1,6 +1,6 @@
 import numpy as np
-from data_preprocessing import get_labels, get_images, display_images
-from save_model import load_model
+from .data_preprocessing import get_labels, get_images, display_images
+from .save_model import load_model
 
 # Load dataset
 X_train, X_test = get_images()

@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from Particle import Particle
+from src import Particle
 
 # Configuration
 MAX_ITER = 50
@@ -13,7 +13,7 @@ COV_TYPES = ["full", "tied", "diag", "spherical"]
 
 
 def main():
-    df = pd.read_csv(Path(__file__).resolve().parent / "data.csv")
+    df = pd.read_csv(Path(__file__).resolve().parent / "src" / "data.csv")
     swarm = [Particle(df) for _ in range(POPULATION)]
 
     # Gets best models position and score

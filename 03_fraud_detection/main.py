@@ -3,13 +3,12 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix, precision_score, recall_score
 
-from data_loader import load_and_engineer_data
-from model import get_baseline_pipeline
+from src import load_and_engineer_data, get_baseline_pipeline
 
 
 def main():
     # Structural relative file tracks
-    BASE_DIR = Path(__file__).resolve().parent.parent
+    BASE_DIR = Path(__file__).resolve().parent
     RESULTS_DIR = BASE_DIR / "results"
     RESULTS_DIR.mkdir(exist_ok=True)
 

@@ -1,7 +1,7 @@
 import numpy as np
-from data_preprocessing import get_labels, get_images
-from cnn import CompleteCNN
-from save_model import save_model
+from .data_preprocessing import get_labels, get_images
+from .cnn import CompleteCNN
+from .save_model import save_model
 
 # Load dataset
 X_train, X_test = get_images()

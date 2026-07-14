@@ -1,93 +1,74 @@
-# CNN-GRU Music Preference Model
+<div align="center">
 
-This project tries to guess if you would like a song, just by listening to it.
+# 🎵 CNN-GRU Music Preference Model
 
-You give it a YouTube playlist of songs you like. It downloads them, listens to
-them with a pretrained audio model, and learns what your "taste" sounds like.
-After that, you can give it a link to any YouTube video and it will tell you
-"Liked" or "Disliked" based on how close the song sounds to your taste.
+**Guesses whether you'd like a song, straight from the audio.**
 
-## How it works
+![Deep Learning](https://img.shields.io/badge/🟣_DEEP_LEARNING-8957e5?style=for-the-badge)
 
-1. **Download songs** - `yt-dlp` grabs the audio from a YouTube playlist and
-   saves each track as a 30-second mp3 clip (mono, 16kHz).
-2. **Listen to the songs** - Each song is cut into 5-second chunks. A
-   pretrained model called PANN (Cnn14) turns every chunk into a list of
-   numbers that describes what the audio sounds like. This part is frozen and
-   never trained.
-3. **Learn the pattern over time** - The chunk descriptions for a song are fed
-   in order into a GRU (a type of recurrent neural network), so the model
-   picks up how the song changes over time, not just a single snapshot.
-4. **Learn your taste** - Instead of teaching the model "like" vs "dislike",
-   it only ever sees songs you like. It learns a single point in space (the
-   "center") that represents your average taste, and pulls all your liked
-   songs close to that point. This is called Deep SVDD, or one-class
-   learning.
-5. **Predict** - For a new song, the model checks how far its embedding is
-   from your taste center. Close enough = "Liked", too far = "Disliked".
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)
+![librosa](https://img.shields.io/badge/librosa-4D02A2?style=flat-square)
+![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)
 
-## Project layout
+</div>
+
+---
+
+Give it a YouTube playlist of songs you like. It downloads them, listens with a pretrained audio model, and learns what your "taste" sounds like. Then hand it any YouTube link and it says **Liked** or **Disliked** based on how close the song sounds to that taste.
+
+## 🧠 How it works
+
+1. **Download** — `yt-dlp` grabs audio from a YouTube playlist, saving each track as a 30-second mp3 (mono, 16kHz).
+2. **Listen** — each song is cut into 5-second chunks; a pretrained **PANN (Cnn14)** turns every chunk into an embedding describing what it sounds like. This backbone is frozen.
+3. **Model time** — the chunk embeddings feed in order into a **GRU**, so the model picks up how a song changes over time, not just one snapshot.
+4. **Learn your taste** — it only ever sees songs you like. It learns a single "center" point representing your average taste and pulls all liked songs toward it — Deep SVDD, or one-class learning.
+5. **Predict** — for a new song, it measures the distance from its embedding to your taste center. Close enough = **Liked**, too far = **Disliked**.
+
+The Liked/Disliked threshold is set automatically after training, from the 90th percentile of distances across your own liked songs. Training only updates the GRU and a small projection head; the PANN backbone stays frozen throughout.
+
+## 📁 Project layout
 
 ```
-main.py                  # simple menu to run everything
-app.py                    # Streamlit UI version of the same three actions
+main.py                   # menu to run everything
+app.py                    # Streamlit UI for the same three actions
 src/
   data_scraping.py        # downloads audio from YouTube
   audio_preprocessing.py  # loads and cleans up audio files
-  hybrid_model.py          # the PANN + GRU model
-  train.py                 # trains the model on your liked songs
-  predict.py                # checks a new song against your taste
-  save_model.py              # saves / loads the trained model
-  set_logger.py                # logging setup
-model/                    # trained model weights get saved here
+  hybrid_model.py         # the PANN + GRU model
+  train.py                # trains on your liked songs
+  predict.py              # checks a new song against your taste
+  save_model.py           # saves / loads the trained model
+  set_logger.py           # logging setup
+model/                    # trained weights saved here
 songs/                    # downloaded training songs go here
 ```
 
-## Setup
+## ⚙️ Setup
 
-1. Dependencies are managed with [uv](https://docs.astral.sh/uv/) and are self-contained within this project folder:
-   ```bash
-   uv sync
-   ```
-2. Make sure `ffmpeg` is installed on your system (needed to extract audio).
-3. Download the PANN checkpoint `Cnn14_emb512_mAP=0.420.pth` and place it in
-   the `model/` folder.
+```bash
+uv sync
+```
 
-## Usage
+1. Install `ffmpeg` on your system (needed to extract audio).
+2. Download the PANN checkpoint `Cnn14_emb512_mAP=0.420.pth` and place it in `model/`.
 
-Run the program:
+## ▶️ Usage
 
 ```bash
 uv run main.py
 ```
 
-You'll see a menu:
+For first-time use, run the actions in this order:
 
-- **Option 2 - Scrape playlist**: Downloads songs from a YouTube playlist you
-  like into the `songs/` folder. Do this first.
-- **Option 3 - Train model**: Trains the model on the songs in `songs/` and
-  saves it to `model/pann_gru.pth`.
-- **Option 1 - Get verdict from a video URL**: Downloads one song from a
-  YouTube link and tells you if the trained model thinks you'd like it.
-- **Option 4 - Exit**.
+1. **Scrape playlist** — downloads songs from a playlist you like into `songs/`.
+2. **Train model** — trains on `songs/` and saves to `model/pann_gru.pth`.
+3. **Get verdict from a video URL** — downloads one song and tells you if you'd like it.
 
-The comment in the menu says it best: for first-time use, run option 2, then
-option 3, before trying option 1.
-
-There's also a Streamlit version of the same three actions (predict, scrape
-playlist, train) if you'd rather click through a UI:
+Prefer a UI? The same three actions are available in Streamlit:
 
 ```bash
 uv run streamlit run app.py
 ```
 
-## Notes
-
-- The songs in this project are the songs used to train this specific model,
-  they're a private/example music taste and can be swapped for your own
-  playlist.
-- Training only updates the GRU and the small projection head on top, the
-  PANN backbone stays frozen the whole time.
-- The "threshold" that decides Liked vs Disliked is calculated automatically
-  after training, based on the 90th percentile of distances in your own
-  liked songs.
+> The bundled songs are the example taste this model was trained on — swap them for your own playlist.

@@ -1,6 +1,6 @@
 from sklearn.mixture import GaussianMixture
 from pathlib import Path
-from data_preprocessing import get_clean_data
+from .data_preprocessing import get_clean_data
 import pickle
 import pandas as pd
 

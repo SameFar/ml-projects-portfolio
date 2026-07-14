@@ -20,7 +20,7 @@ def save_model(model, filename=model_path):
 
 
 def load_model(filename=model_path, img_shape=[28, 28]):
-    from cnn import CompleteCNN
+    from .cnn import CompleteCNN
 
     with open(filename, "rb") as f:
         param = pickle.load(f)

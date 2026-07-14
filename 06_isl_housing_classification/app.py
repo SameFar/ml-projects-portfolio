@@ -1,4 +1,3 @@
-# src/app.py
 import os
 import pickle
 import pandas as pd
@@ -6,8 +5,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 # Dynamic absolute path resolution targeting the project directory structure
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_DIR = os.path.dirname(SCRIPT_DIR)
+PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(PROJECT_DIR, "saved_models", "housing_xgb_pipeline.pkl")
 
 if not os.path.exists(MODEL_PATH):

@@ -4,13 +4,12 @@ import seaborn as sns
 from sklearn.metrics import r2_score, mean_squared_error
 import numpy as np
 
-from data_loader import load_clean_split_data
-from model import get_regression_pipeline
+from src import load_clean_split_data, get_regression_pipeline
 
 
 def main():
     # Dynamic path handling relative to this script's position
-    BASE_DIR = Path(__file__).resolve().parent.parent
+    BASE_DIR = Path(__file__).resolve().parent
     RESULTS_DIR = BASE_DIR / "results"
     RESULTS_DIR.mkdir(exist_ok=True)
 

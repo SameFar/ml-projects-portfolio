@@ -1,7 +1,8 @@
 import pygame
 from pathlib import Path
 import numpy as np
-import config
+
+from . import config
 
 # Import assets
 assets_dir = Path(__file__).resolve().parent.parent / "assets"

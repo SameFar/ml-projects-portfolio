@@ -1,12 +1,11 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 import torch
-from pydantic_model import FashionInput
-from conversion import convert, y_convert
-from neural_network import MultiHeadNeuralNetwork, ol
 from pathlib import Path
 
-model_path = Path(__file__).resolve().parent / "model" / "torch_model.pth"
+from src import FashionInput, convert, y_convert, MultiHeadNeuralNetwork, ol
+
+model_path = Path(__file__).resolve().parent / "src" / "model" / "torch_model.pth"
 
 app = FastAPI()
 

@@ -1,15 +1,13 @@
-# src/train_housing.py
 import os
 import pickle
 from pathlib import Path
 from sklearn.metrics import accuracy_score, classification_report
 
-from models import get_pipelines
-from data_preprocessing import load_and_clean_data, run_macro_stratified_split
+from src import get_pipelines, load_and_clean_data, run_macro_stratified_split
 
 
 def main():
-    data_path = Path(__file__).resolve().parent.parent / "data" / "isl_housing.csv"
+    data_path = Path(__file__).resolve().parent / "data" / "isl_housing.csv"
 
     print("Executing localized property parsing pipeline...")
     processed_df = load_and_clean_data(data_path)
@@ -29,8 +27,7 @@ def main():
     print(classification_report(y_test, test_predictions))
 
     # Path-independent absolute structural mapping
-    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-    PROJECT_DIR = os.path.dirname(SCRIPT_DIR)
+    PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
     OUTPUT_DIR = os.path.join(PROJECT_DIR, "saved_models")
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 

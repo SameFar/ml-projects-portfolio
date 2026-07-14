@@ -1,24 +1,36 @@
-# Customer Types — E-Commerce Segmentation
+<div align="center">
 
-Groups e-commerce customers into behavioral segments from raw transaction data, using a Gaussian Mixture Model. Comes with a FastAPI endpoint that takes a customer's yearly stats and returns which segment they fall into.
+# 🛒 Customer Types — E-Commerce Segmentation
 
-## How it works
+**Gaussian Mixture clustering of shoppers, served behind FastAPI.**
 
-The source data is the [UCI Online Retail II](https://archive.ics.uci.edu/dataset/352/online+retail) dataset — one row per line item on an invoice. `src/data_preprocessing.py` groups everything by `Customer ID` so each row becomes one customer, and engineers seven features per customer:
+![Machine Learning](https://img.shields.io/badge/🔵_MACHINE_LEARNING-1f6feb?style=for-the-badge)
 
-- **Transactions** — how many line items they've bought
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=flat-square&logo=scikitlearn&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
+
+</div>
+
+---
+
+Groups e-commerce customers into behavioral segments from raw transaction data using a Gaussian Mixture Model. A FastAPI endpoint takes a customer's yearly stats and returns their segment.
+
+## 🧠 How it works
+
+The source is the [UCI Online Retail II](https://archive.ics.uci.edu/dataset/352/online+retail) dataset — one row per invoice line item. `src/data_preprocessing.py` groups by `Customer ID` so each row is one customer, engineering seven features:
+
+- **Transactions** — line items bought
 - **Total Quantity** — total units purchased
-- **Total Spent** — price times quantity, summed
-- **Total Refund Received** — money back from returns (quantities under 0 are treated as refunds)
-- **Avg Spent** — total spent divided by transaction count
-- **Purchases per month** — transactions divided by 12 (the dataset spans roughly a year)
+- **Total Spent** — price × quantity, summed
+- **Total Refund Received** — money back from returns (negative quantities)
+- **Avg Spent** — total spent ÷ transaction count
+- **Purchases per month** — transactions ÷ 12 (the dataset spans ~a year)
 - **Return Rate** — transaction count relative to refund count
 
-Features are scaled with `RobustScaler` before clustering, since a handful of very high spenders would otherwise dominate a standard scaler.
+Features are scaled with `RobustScaler`, since a few very high spenders would dominate a standard scaler. The exploration notebook tried KMeans, HDBSCAN, and GMM side by side in 3D; GMM gave the cleanest separation, so `src/train.py` fits a 6-component GMM saved to `model/model.pkl`.
 
-The exploration notebook (`Retail Customer Clustering.ipynb`) tried KMeans, HDBSCAN, and a Gaussian Mixture Model side by side, plotting each in 3D. GMM gave the cleanest separation, so that's what `src/train.py` actually fits — 6 components, saved to `model/model.pkl`.
-
-The FastAPI app (`src/app.py`) maps each of the 6 cluster indices to a human-readable label based on manual inspection of the cluster means:
+`app.py` maps the 6 cluster indices to human-readable labels from manual inspection of the cluster means:
 
 | Cluster | Label |
 | --- | --- |
@@ -26,23 +38,21 @@ The FastAPI app (`src/app.py`) maps each of the 6 cluster indices to a human-rea
 | 1 | Significant Refund rate |
 | 2 | Frequent Buyers |
 | 3 | Anomaly |
-| 4 | Big Spenders - Infrequent |
+| 4 | Big Spenders – Infrequent |
 | 5 | Anomaly |
 
-Two of the six clusters (3 and 5) came out looking like outlier groups rather than distinct behavioral types, so both just get labeled "Anomaly."
+Clusters 3 and 5 came out as outlier groups rather than distinct behaviors, so both are labeled "Anomaly." `src/pydantic_model.py` only asks the caller for raw counts and derives `Avg_Spent`, `Transactions_per_month`, and `Return_Rate` as Pydantic computed fields.
 
-`src/pydantic_model.py` defines the API's request schema — it only asks the caller for the raw counts (transactions, quantity, spent, refunds, returns) and computes `Avg_Spent`, `Transactions_per_month`, and `Return_Rate` itself as Pydantic computed fields, so the caller doesn't have to derive them.
+## 📊 Results
 
-## Results
+This is unsupervised, so there's no accuracy/F1 — GMM was chosen over KMeans/HDBSCAN qualitatively, on visual cluster separation in the 3D scatter plots.
 
-This is unsupervised clustering, so there's no accuracy/F1 to report — the notebook's justification for picking GMM over KMeans/HDBSCAN is qualitative (visual cluster separation in the 3D scatter plots), not a benchmarked metric.
-
-## Getting started
+## 🚀 Getting started
 
 ```bash
 uv sync
-cd src && uv run train.py  # fits the GMM on data/online_retail_II.xlsx, saves model/model.pkl
-cd src && uv run app.py    # starts the FastAPI server at http://127.0.0.1:8000
+uv run -m src.train  # fits the GMM on data/online_retail_II.xlsx, saves model/model.pkl
+uv run app.py        # starts the FastAPI server at http://127.0.0.1:8000
 ```
 
 `POST /predict` takes `Transactions`, `Quantity`, `Spent`, `Refunds`, and `Returns`, and returns the predicted segment label.

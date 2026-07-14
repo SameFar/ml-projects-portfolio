@@ -1,23 +1,37 @@
-# Breast Cancer Classification — 8-Model Consensus Ensemble
+<div align="center">
 
-Classifies breast tumor biopsies as malignant or benign using the classic [Wisconsin breast cancer dataset](https://www.kaggle.com/datasets/uciml/breast-cancer-wisconsin-data). Instead of picking one model, this trains eight different classifiers and combines their votes into a single conservative decision.
+# 🔬 Breast Cancer Classification
 
-## How it works
+**Eight classifiers, one conservative consensus vote.**
 
-The data is 569 biopsy samples with 30 measured features (radius, texture, smoothness, etc.), each computed as mean/standard-error/worst across cell nuclei in the sample. Five features with very low correlation to the diagnosis (`|r| < 0.01`, things like `texture_se` and `fractal_dimension_mean`) get dropped, leaving 25 features.
+![Machine Learning](https://img.shields.io/badge/🔵_MACHINE_LEARNING-1f6feb?style=for-the-badge)
 
-The eight models split into two groups that get different preprocessing:
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=flat-square&logo=scikitlearn&logoColor=white)
+![XGBoost](https://img.shields.io/badge/XGBoost-337AB7?style=flat-square)
 
-- **Distance/gradient-based models** (Logistic Regression, SGD, SVC, KNN, Naive Bayes): fit on data that's been passed through a Yeo-Johnson power transform (to reduce skew) and had outliers stripped out with an `IsolationForest` (7% contamination) beforehand. These models care about scale and are sensitive to leverage points, so they get the cleanup.
-- **Tree-based models** (Random Forest, XGBoost, Decision Tree): fit on the raw, untransformed data, since trees split on thresholds and don't care about scale or a handful of outliers.
+</div>
 
-`src/main.py` runs an 80/20 stratified train/test split, trains all eight, scores each on accuracy/precision/recall/F1, writes the comparison table to `results/results.txt`, and pickles every trained model into `saved_models/`.
+---
 
-`src/predict.py` loads all eight saved models and runs a sample through every one of them. Instead of majority vote, the final call is a conservative threshold: if 4 or more of the 8 models flag "malignant," the case is called malignant. The idea is to bias the whole system toward catching more true positives at the cost of some false alarms, which is generally what you'd want in a screening context.
+Classifies breast tumor biopsies as malignant or benign on the [Wisconsin breast cancer dataset](https://www.kaggle.com/datasets/uciml/breast-cancer-wisconsin-data). Instead of one model, it trains eight and combines their votes into a single conservative decision.
 
-## Results
+## 🧠 How it works
 
-From `results/results.txt` (test set, 20% holdout):
+569 biopsy samples, 30 features each (radius, texture, smoothness…) computed as mean / standard-error / worst across cell nuclei. Five features with near-zero correlation to the diagnosis (`|r| < 0.01`) are dropped, leaving 25.
+
+The eight models split into two groups with different preprocessing:
+
+- **Distance / gradient-based** (Logistic Regression, SGD, SVC, KNN, Naive Bayes) — fit on data passed through a Yeo-Johnson power transform (reduces skew) with outliers stripped by an `IsolationForest` (7% contamination). These care about scale and leverage points, so they get the cleanup.
+- **Tree-based** (Random Forest, XGBoost, Decision Tree) — fit on raw data, since trees split on thresholds and ignore scale and a few outliers.
+
+`main.py` runs an 80/20 stratified split, trains all eight, scores accuracy / precision / recall / F1, writes the table to `results/results.txt`, and pickles each model into `saved_models/`.
+
+`src/predict.py` loads all eight and votes: if **4 or more** flag malignant, the case is called malignant — deliberately biased toward catching true positives, as you'd want in a screening context.
+
+## 📊 Results
+
+From `results/results.txt` (20% holdout):
 
 | Model | Accuracy | Precision | Recall | F1 |
 | --- | --- | --- | --- | --- |
@@ -30,14 +44,14 @@ From `results/results.txt` (test set, 20% holdout):
 | KNN | 0.9561 | 0.9569 | 0.9561 | 0.9558 |
 | Decision Tree | 0.9298 | 0.9297 | 0.9298 | 0.9294 |
 
-The three models on Yeo-Johnson-transformed, outlier-cleaned data (Logistic Regression, SGD, SVC) came out on top — once the skew is stabilized, the decision boundary between malignant and benign is mostly linear, so the simpler linear/margin-based models edge out the tree ensembles here.
+The three models on Yeo-Johnson-transformed, outlier-cleaned data came out on top — once skew is stabilized, the malignant/benign boundary is mostly linear, so the simpler linear/margin models edge out the tree ensembles.
 
-## Getting started
+## 🚀 Getting started
 
 ```bash
 uv sync
-uv run src/main.py       # trains all 8 models, writes results/results.txt and saved_models/*.pkl
-uv run src/predict.py    # loads the saved models and runs the ensemble vote on data/sample.csv
+uv run main.py       # trains all 8 models, writes results/results.txt and saved_models/*.pkl
+uv run -m src.predict    # loads the saved models and runs the ensemble vote on data/sample.csv
 ```
 
-`src/predict.py` expects `data/sample.csv` to contain rows with the 25 features listed in `EXPECTED_FEATURES` in that file — it picks a random row from that CSV and prints each model's vote plus the final consensus call.
+`src/predict.py` expects `data/sample.csv` with the 25 features listed in `EXPECTED_FEATURES` — it picks a random row and prints each model's vote plus the final consensus call.

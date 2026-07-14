@@ -1,11 +1,12 @@
-from pydantic_model import CustomerYearlyMetrics
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 import pandas as pd
 import pickle
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent / "model"
+from src import CustomerYearlyMetrics
+
+BASE_DIR = Path(__file__).resolve().parent / "model"
 
 # Sample labels based on my observations
 labels = {

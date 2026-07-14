@@ -4,8 +4,9 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
-from data_loader import load_cancer_dataset, process_and_split_features
-from models import (
+from src import (
+    load_cancer_dataset,
+    process_and_split_features,
     get_outlier_detector,
     get_parametric_pipelines,
     get_non_parametric_models,
@@ -14,7 +15,7 @@ from models import (
 
 def main():
     print("Initiating execution routine...")
-    data_dir = os.path.join(os.path.dirname(__file__), "..", "data", "breastcancer.csv")
+    data_dir = os.path.join(os.path.dirname(__file__), "data", "breastcancer.csv")
     df = load_cancer_dataset(data_dir)
     X, y = process_and_split_features(df)
 
@@ -62,8 +63,8 @@ def main():
     )
 
     # Make filesystem archive locations
-    results_dir = os.path.join(os.path.dirname(__file__), "../results")
-    models_dir = os.path.join(os.path.dirname(__file__), "../saved_models")
+    results_dir = os.path.join(os.path.dirname(__file__), "results")
+    models_dir = os.path.join(os.path.dirname(__file__), "saved_models")
     os.makedirs(results_dir, exist_ok=True)
     os.makedirs(models_dir, exist_ok=True)
 

@@ -1,15 +1,15 @@
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
-from data_loader import load_and_preprocess
-from perceptron import Perceptron
 from pathlib import Path
+
+from src import load_and_preprocess, Perceptron
 
 
 def main():
     # dataset from https://www.kaggle.com/datasets/vikrishnan/iris-dataset
-    data_path = Path(__file__).resolve().parent.parent / "data" / "iris.csv"
-    results_dir = Path(__file__).resolve().parent.parent / "results"
+    data_path = Path(__file__).resolve().parent / "data" / "iris.csv"
+    results_dir = Path(__file__).resolve().parent / "results"
     os.makedirs(results_dir, exist_ok=True)
 
     # 1. Prepare data

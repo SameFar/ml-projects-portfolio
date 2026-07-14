@@ -1,8 +1,8 @@
 import numpy as np
-from neural_network import NeuralNetwork, ol
-from data_preprocessing import get_data
-from conversion import get_y_dict
-from save_model import save_model
+from .neural_network import NeuralNetwork, ol
+from .data_preprocessing import get_data
+from .conversion import get_y_dict
+from .save_model import save_model
 
 EPOCH = 3000
 

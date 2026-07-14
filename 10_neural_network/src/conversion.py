@@ -1,5 +1,5 @@
 import numpy as np
-from pydantic_model import FashionInput
+from .pydantic_model import FashionInput
 
 CATEGORY_MAP = {
     "hair_colour": np.array(["Brown", "Red", "Blonde", "Grey"]),

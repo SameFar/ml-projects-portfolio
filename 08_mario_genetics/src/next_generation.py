@@ -1,7 +1,8 @@
 import random
-import config
 import numpy as np
-from game_objects import Player
+
+from . import config
+from .game_objects import Player
 
 
 def natural_selection(population):

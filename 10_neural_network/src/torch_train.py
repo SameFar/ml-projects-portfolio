@@ -1,8 +1,8 @@
 import torch
 import torch.nn.functional as F
-from neural_network import MultiHeadNeuralNetwork, ol
-from data_preprocessing import get_data
-from conversion import get_y_dict
+from .neural_network import MultiHeadNeuralNetwork, ol
+from .data_preprocessing import get_data
+from .conversion import get_y_dict
 from pathlib import Path
 
 model_path = Path(__file__).resolve().parent / "model" / "torch_model.pth"

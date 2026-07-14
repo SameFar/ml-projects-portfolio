@@ -1,8 +1,13 @@
 import os
 import numpy as np
 from sklearn.model_selection import train_test_split
-from data_loader import load_base_data, build_features
-from model import clean_training_outliers, get_baseline_models, evaluate_predictions
+from src import (
+    load_base_data,
+    build_features,
+    clean_training_outliers,
+    get_baseline_models,
+    evaluate_predictions,
+)
 
 
 def main():
@@ -40,7 +45,7 @@ def main():
         results_output.append(report_line)
 
     # Write execution results file
-    results_dir = os.path.join(os.path.dirname(__file__), "../results")
+    results_dir = os.path.join(os.path.dirname(__file__), "results")
     os.makedirs(results_dir, exist_ok=True)
 
     with open(os.path.join(results_dir, "results.txt"), "w") as f:

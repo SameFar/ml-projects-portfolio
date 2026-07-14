@@ -1,17 +1,25 @@
-from next_generation import mariojrs, natural_selection
-from game_logic import create_map, goals, draw, move, clock
 from pathlib import Path
-import config
-import numpy as np
-from game_objects import Player
 import math
 
+import numpy as np
 import pygame
+
+from src import (
+    config,
+    Player,
+    create_map,
+    goals,
+    draw,
+    move,
+    clock,
+    mariojrs,
+    natural_selection,
+)
 
 
 def main():
     SAVE_DIR = (
-        Path(__file__).resolve().parent.parent / "saved_model" / "elite_mario_dna.npy"
+        Path(__file__).resolve().parent / "saved_model" / "elite_mario_dna.npy"
     )
     create_map()
     agents = [Player() for _ in range(config.POPULATION)]
