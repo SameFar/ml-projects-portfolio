@@ -68,18 +68,6 @@ Neural networks — hand-written backprop through CNNs, RNNs, LSTMs, and GRUs in
 | **14** | [Stock Prediction LSTM](14_stock_prediction_lstm) | LSTM | PyTorch, yfinance | Predicts next-day NVDA log-returns from a rolling window. |
 | **15** | [CNN-GRU Music Preference](15_CNN-GRU_music_perferance) | Pretrained CNN embeddings + GRU | PyTorch, librosa, Streamlit | See above. |
 
-<div align="center">
-
-![Artificial Intelligence](https://img.shields.io/badge/🟢_ARTIFICIAL_INTELLIGENCE-16-2da44e?style=for-the-badge)
-
-</div>
-
-LLM-driven systems.
-
-| # | Project | Approach | Stack | Notes |
-| --- | --- | --- | --- | --- |
-| **16** | [Session Manager](16_...) *(work in progress)* |
-
 ---
 
 ## 🚀 Getting started
